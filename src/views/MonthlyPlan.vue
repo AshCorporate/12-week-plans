@@ -94,4 +94,14 @@ function addTask() {
   color: var(--text-secondary);
   padding: 3rem 0;
 }
+@media (max-width: 768px) {
+  .progress-info {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .progress-info .progress-bar-wrap {
+    margin-left: 0;
+    width: 100%;
+  }
+}
 </style>

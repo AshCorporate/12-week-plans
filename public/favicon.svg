@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <style>
+    @keyframes blink {
+      0%, 92%, 96%, 100% { transform: scaleY(1); }
+      94% { transform: scaleY(0.08); }
+    }
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+    }
+    @keyframes headphone-glow {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 2px #2a2a2a); }
+      50% { opacity: 0.85; filter: drop-shadow(0 0 5px #555); }
+    }
+    .face-group {
+      animation: breathe 4s ease-in-out infinite;
+      transform-origin: 32px 36px;
+    }
+    .eye-left {
+      animation: blink 3.5s ease-in-out infinite;
+      transform-origin: 23px 35px;
+    }
+    .eye-right {
+      animation: blink 3.5s ease-in-out infinite;
+      transform-origin: 41px 35px;
+    }
+    .headphones {
+      animation: headphone-glow 2.5s ease-in-out infinite;
+    }
+  </style>
+
+  <!-- Face group with breathing animation -->
+  <g class="face-group">
+    <!-- Neck -->
+    <rect x="27" y="50" width="10" height="7" rx="3" fill="#E8B98A"/>
+
+    <!-- Face / skin -->
+    <ellipse cx="32" cy="36" rx="19" ry="21" fill="#F0C490"/>
+
+    <!-- Slight beard stubble on jaw -->
+    <ellipse cx="32" cy="53" rx="11" ry="4" fill="#C9975A" opacity="0.35"/>
+    <ellipse cx="22" cy="50" rx="5" ry="3" fill="#C9975A" opacity="0.25"/>
+    <ellipse cx="42" cy="50" rx="5" ry="3" fill="#C9975A" opacity="0.25"/>
+
+    <!-- Hair (brown, messy on top) -->
+    <ellipse cx="32" cy="18" rx="19" ry="10" fill="#5C3A1E"/>
+    <!-- Messy hair tufts -->
+    <ellipse cx="18" cy="22" rx="6" ry="9" fill="#5C3A1E"/>
+    <ellipse cx="46" cy="22" rx="6" ry="9" fill="#5C3A1E"/>
+    <ellipse cx="26" cy="14" rx="7" ry="6" fill="#6B4423"/>
+    <ellipse cx="38" cy="14" rx="7" ry="6" fill="#6B4423"/>
+    <ellipse cx="32" cy="12" rx="6" ry="5" fill="#7A5030"/>
+    <!-- Hair highlights -->
+    <ellipse cx="28" cy="13" rx="3" ry="2" fill="#8B6040" opacity="0.5"/>
+
+    <!-- Ears -->
+    <ellipse cx="13" cy="36" rx="4" ry="5.5" fill="#E8B98A"/>
+    <ellipse cx="51" cy="36" rx="4" ry="5.5" fill="#E8B98A"/>
+    <ellipse cx="13" cy="36" rx="2" ry="3.5" fill="#D4A070" opacity="0.6"/>
+    <ellipse cx="51" cy="36" rx="2" ry="3.5" fill="#D4A070" opacity="0.6"/>
+
+    <!-- Eye whites -->
+    <ellipse class="eye-left" cx="23" cy="35" rx="5.5" ry="5" fill="white"/>
+    <ellipse class="eye-right" cx="41" cy="35" rx="5.5" ry="5" fill="white"/>
+
+    <!-- Irises (blue-grey) -->
+    <ellipse class="eye-left" cx="23" cy="35" rx="3.5" ry="3.5" fill="#5B8DB8"/>
+    <ellipse class="eye-right" cx="41" cy="35" rx="3.5" ry="3.5" fill="#5B8DB8"/>
+
+    <!-- Pupils -->
+    <ellipse class="eye-left" cx="23" cy="35" rx="2" ry="2" fill="#1A1A1A"/>
+    <ellipse class="eye-right" cx="41" cy="35" rx="2" ry="2" fill="#1A1A1A"/>
+
+    <!-- Eye shine -->
+    <circle class="eye-left" cx="24.5" cy="33.5" r="1" fill="white" opacity="0.8"/>
+    <circle class="eye-right" cx="42.5" cy="33.5" r="1" fill="white" opacity="0.8"/>
+
+    <!-- Nose -->
+    <ellipse cx="32" cy="42" rx="3" ry="2" fill="#D4935A" opacity="0.5"/>
+    <path d="M30 43 Q32 45 34 43" stroke="#C07840" stroke-width="1" fill="none" opacity="0.6"/>
+
+    <!-- Smile -->
+    <path d="M25 48 Q32 55 39 48" stroke="#8B5A2B" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Headphones (on top of hair) -->
+  <g class="headphones">
+    <!-- Headband arc -->
+    <path d="M10 32 Q10 10 32 10 Q54 10 54 32" stroke="#1A1A1A" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <!-- Left ear cup -->
+    <rect x="6" y="28" width="10" height="14" rx="5" fill="#222222"/>
+    <rect x="8" y="30" width="6" height="10" rx="3" fill="#333333"/>
+    <!-- Right ear cup -->
+    <rect x="48" y="28" width="10" height="14" rx="5" fill="#222222"/>
+    <rect x="50" y="30" width="6" height="10" rx="3" fill="#333333"/>
+    <!-- Subtle LED glow on right cup -->
+    <circle cx="53" cy="37" r="1.2" fill="#6C63FF" opacity="0.8"/>
+  </g>
+</svg>
