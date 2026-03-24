@@ -18,7 +18,7 @@ export const useMonthlyPlanStore = defineStore('monthlyPlan', () => {
   function addTask(blockNum, text) {
     const key = `block-${blockNum}`
     if (!tasksByBlock.value[key]) tasksByBlock.value[key] = []
-    tasksByBlock.value[key].push({ id: Date.now().toString(), text, done: false })
+    tasksByBlock.value[key].push({ id: crypto.randomUUID(), text, done: false })
   }
 
   function toggleTask(blockNum, id) {

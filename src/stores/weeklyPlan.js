@@ -18,7 +18,7 @@ export const useWeeklyPlanStore = defineStore('weeklyPlan', () => {
   function addTask(weekNum, text) {
     const key = `week-${weekNum}`
     if (!tasksByWeek.value[key]) tasksByWeek.value[key] = []
-    tasksByWeek.value[key].push({ id: Date.now().toString(), text, done: false })
+    tasksByWeek.value[key].push({ id: crypto.randomUUID(), text, done: false })
   }
 
   function toggleTask(weekNum, id) {

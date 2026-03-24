@@ -10,7 +10,7 @@ export const useYearPlanStore = defineStore('yearPlan', () => {
   }, { deep: true })
 
   function addGoal(text) {
-    goals.value.push({ id: Date.now().toString(), text, done: false })
+    goals.value.push({ id: crypto.randomUUID(), text, done: false })
   }
 
   function toggleGoal(id) {

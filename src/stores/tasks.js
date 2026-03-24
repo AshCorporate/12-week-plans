@@ -25,7 +25,7 @@ export const useTasksStore = defineStore('tasks', () => {
     const key = getTodayKey()
     if (!tasksByDate.value[key]) tasksByDate.value[key] = []
     tasksByDate.value[key].push({
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       text,
       done: false,
     })

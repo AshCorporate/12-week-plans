@@ -7,9 +7,9 @@ export const useSettingsStore = defineStore('settings', () => {
   const startDate = ref(stored.startDate || new Date().toISOString().split('T')[0])
   const theme = ref(stored.theme || 'dark')
 
-  watch({ startDate, theme }, () => {
+  watch([startDate, theme], () => {
     localStorage.setItem('vis-settings', JSON.stringify({ startDate: startDate.value, theme: theme.value }))
-  }, { deep: true })
+  })
 
   function resetAll() {
     localStorage.clear()
