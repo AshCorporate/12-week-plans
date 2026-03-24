@@ -5,7 +5,7 @@ export const useTasksStore = defineStore('tasks', () => {
   const stored = JSON.parse(localStorage.getItem('vis-tasks') || '{}')
   const tasksByDate = ref(stored)
 
-  const activeTimer = ref(null) // { taskId, date, endTime, isPaused, remainingMs }
+  const activeTimer = ref(null) // { taskId, date, endTime, isPaused, remainingMs, startedAt }
 
   watch(tasksByDate, () => {
     localStorage.setItem('vis-tasks', JSON.stringify(tasksByDate.value))
@@ -21,14 +21,23 @@ export const useTasksStore = defineStore('tasks', () => {
     return tasksByDate.value[key]
   }
 
-  function addTask(text) {
+  function addTask(text, options = {}) {
     const key = getTodayKey()
     if (!tasksByDate.value[key]) tasksByDate.value[key] = []
     tasksByDate.value[key].push({
       id: crypto.randomUUID(),
       text,
       done: false,
+      plannedPomodoros: options.plannedPomodoros || 1,
+      completedPomodoros: 0,
+      isUnplanned: options.isUnplanned || false,
+      pomodoroLog: [],
+      interruptionsCount: 0,
     })
+  }
+
+  function addUnplannedTask(text) {
+    addTask(text, { isUnplanned: true })
   }
 
   function toggleTask(id) {
@@ -47,6 +56,37 @@ export const useTasksStore = defineStore('tasks', () => {
     }
   }
 
+  function incrementPlanned(id) {
+    const tasks = getTodayTasks()
+    const task = tasks.find(t => t.id === id)
+    if (task && task.plannedPomodoros < 12) task.plannedPomodoros++
+  }
+
+  function decrementPlanned(id) {
+    const tasks = getTodayTasks()
+    const task = tasks.find(t => t.id === id)
+    if (task && task.plannedPomodoros > 1) task.plannedPomodoros--
+  }
+
+  function recordCompletedPomodoro(id) {
+    const tasks = getTodayTasks()
+    const task = tasks.find(t => t.id === id)
+    if (task) {
+      task.completedPomodoros = (task.completedPomodoros || 0) + 1
+      if (!task.pomodoroLog) task.pomodoroLog = []
+      task.pomodoroLog.push({
+        startedAt: activeTimer.value?.startedAt || new Date().toISOString(),
+        completedAt: new Date().toISOString(),
+      })
+    }
+  }
+
+  function recordInterruption(id) {
+    const tasks = getTodayTasks()
+    const task = tasks.find(t => t.id === id)
+    if (task) task.interruptionsCount = (task.interruptionsCount || 0) + 1
+  }
+
   function startTimer(taskId, durationMs) {
     activeTimer.value = {
       taskId,
@@ -54,6 +94,7 @@ export const useTasksStore = defineStore('tasks', () => {
       endTime: Date.now() + durationMs,
       isPaused: false,
       remainingMs: durationMs,
+      startedAt: new Date().toISOString(),
     }
   }
 
@@ -77,9 +118,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
   function completeTimer() {
     if (activeTimer.value) {
-      const tasks = getTodayTasks()
-      const task = tasks.find(t => t.id === activeTimer.value.taskId)
-      if (task) task.done = true
+      recordCompletedPomodoro(activeTimer.value.taskId)
     }
     activeTimer.value = null
   }
@@ -90,8 +129,13 @@ export const useTasksStore = defineStore('tasks', () => {
     getTodayKey,
     getTodayTasks,
     addTask,
+    addUnplannedTask,
     toggleTask,
     deleteTask,
+    incrementPlanned,
+    decrementPlanned,
+    recordCompletedPomodoro,
+    recordInterruption,
     startTimer,
     pauseTimer,
     resumeTimer,
@@ -99,3 +143,4 @@ export const useTasksStore = defineStore('tasks', () => {
     completeTimer,
   }
 })
+
