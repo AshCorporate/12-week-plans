@@ -61,7 +61,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   }
 
   // --- Actions ---
-  function startSession(taskName, plannedPomodoros) {
+  function startSession(taskName, plannedPomodoros, notes = '') {
     currentSession.value = {
       id: crypto.randomUUID(),
       taskName,
@@ -73,6 +73,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
       timerActive: false,
       startedAt: new Date().toISOString(),
       concentrationRating: null,
+      notes,
     }
   }
 
@@ -116,6 +117,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
       concentrationRating: null,
       completedAt: new Date().toISOString(),
       abandoned: true,
+      notes: s.notes || '',
     })
     currentSession.value = null
   }
@@ -133,6 +135,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
       concentrationRating,
       completedAt: new Date().toISOString(),
       abandoned: false,
+      notes: s.notes || '',
     })
     currentSession.value = null
   }

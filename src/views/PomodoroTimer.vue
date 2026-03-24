@@ -7,6 +7,33 @@
 
     <!-- Screen 1: Start session -->
     <div v-if="!pomodoroStore.currentSession" class="start-screen">
+      <!-- Tasks for today -->
+      <div class="card tasks-card">
+        <h2 class="section-title">📋 Задачи на сегодня</h2>
+        <p class="date-label">{{ currentDate }}</p>
+        <div class="add-task-row">
+          <input
+            v-model="newTask"
+            class="input"
+            placeholder="Новая задача..."
+            @keydown.enter="addTask"
+          />
+          <button class="btn btn-primary" @click="addTask">Добавить</button>
+        </div>
+        <div v-if="todayTasks.length === 0" class="empty-state">
+          <p>Задач на сегодня нет. Добавьте первую!</p>
+        </div>
+        <div class="task-list">
+          <TaskCard
+            v-for="task in todayTasks"
+            :key="task.id"
+            :task="task"
+            @toggle="tasksStore.toggleTask(task.id)"
+            @delete="tasksStore.deleteTask(task.id)"
+          />
+        </div>
+      </div>
+
       <div class="card start-card">
         <h2 class="section-title">Новая сессия</h2>
         <div class="field-group">
@@ -28,6 +55,10 @@
             </div>
             <button class="btn btn-ghost" @click="plannedPomodoros = Math.min(12, plannedPomodoros + 1)">+</button>
           </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Заметки к занятию (необязательно)</label>
+          <textarea v-model="sessionNotes" class="input notes-textarea" placeholder="План, конспект или цели на сессию..." rows="3" />
         </div>
         <button class="btn btn-primary start-btn" :disabled="!taskName.trim()" @click="startSession">
           Начать сессию 🍅
@@ -56,12 +87,23 @@
         </div>
 
         <div v-if="pomodoroStore.todaySessions.length" class="today-sessions">
-          <div v-for="s in [...pomodoroStore.todaySessions].reverse()" :key="s.id" class="session-row">
-            <span class="session-icon">{{ s.abandoned ? '⚠️' : '✅' }}</span>
-            <span class="session-name">{{ s.taskName }}</span>
-            <span class="session-count">{{ s.completedPomodoros }} 🍅</span>
-            <span v-if="s.concentrationRating" class="session-rating">{{ concentrationEmojis[s.concentrationRating - 1] }}</span>
-          </div>
+          <template v-for="s in [...pomodoroStore.todaySessions].reverse()" :key="s.id">
+            <div class="session-row">
+              <span class="session-icon">{{ s.abandoned ? '⚠️' : '✅' }}</span>
+              <span class="session-name">{{ s.taskName }}</span>
+              <span class="session-count">{{ s.completedPomodoros }} 🍅</span>
+              <span v-if="s.concentrationRating" class="session-rating">{{ concentrationEmojis[s.concentrationRating - 1] }}</span>
+              <button
+                v-if="s.notes"
+                class="notes-toggle-btn"
+                :title="expandedNotes === s.id ? 'Скрыть заметки' : 'Показать заметки'"
+                @click="expandedNotes = expandedNotes === s.id ? null : s.id"
+              >📝</button>
+            </div>
+            <div v-if="expandedNotes === s.id" class="session-notes-box">
+              <p class="session-notes-text">{{ s.notes }}</p>
+            </div>
+          </template>
         </div>
         <p v-else class="empty-hint">Сегодня сессий ещё не было</p>
       </div>
@@ -142,6 +184,16 @@
           </button>
         </div>
 
+        <div class="field-group notes-field-group">
+          <label class="field-label">📝 Заметки по итогам (необязательно)</label>
+          <textarea
+            v-model="pomodoroStore.currentSession.notes"
+            class="input notes-textarea"
+            placeholder="Что удалось сделать, что мешало, идеи..."
+            rows="3"
+          />
+        </div>
+
         <button class="btn btn-primary save-btn" :disabled="!selectedRating" @click="saveSession">
           Сохранить
         </button>
@@ -186,18 +238,40 @@
 <script setup>
 import { ref, computed, watch, onUnmounted } from 'vue'
 import { usePomodoroStore } from '../stores/pomodoro.js'
+import { useTasksStore } from '../stores/tasks.js'
+import TaskCard from '../components/TaskCard.vue'
 
 const pomodoroStore = usePomodoroStore()
+const tasksStore = useTasksStore()
+
+// --- Tasks section ---
+const newTask = ref('')
+const currentDate = computed(() =>
+  new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+)
+const todayTasks = computed(() => tasksStore.getTodayTasks())
+
+function addTask() {
+  if (newTask.value.trim()) {
+    tasksStore.addTask(newTask.value.trim())
+    newTask.value = ''
+  }
+}
 
 // --- Start screen ---
 const taskName = ref('')
 const plannedPomodoros = ref(4)
+const sessionNotes = ref('')
+
+// Track expanded notes in session history
+const expandedNotes = ref(null)
 
 function startSession() {
   if (!taskName.value.trim()) return
-  pomodoroStore.startSession(taskName.value.trim(), plannedPomodoros.value)
+  pomodoroStore.startSession(taskName.value.trim(), plannedPomodoros.value, sessionNotes.value)
   taskName.value = ''
   plannedPomodoros.value = 4
+  sessionNotes.value = ''
   elapsed.value = 0
 }
 
@@ -414,7 +488,7 @@ onUnmounted(() => stopInterval())
 }
 
 /* Start screen */
-.start-card, .today-card {
+.tasks-card, .start-card, .today-card {
   margin-bottom: 1.25rem;
 }
 
@@ -427,6 +501,36 @@ onUnmounted(() => stopInterval())
   margin-bottom: 1rem;
 }
 
+.date-label {
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  text-transform: capitalize;
+}
+
+.add-task-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.add-task-row .input {
+  flex: 1;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 1.5rem 0;
+  font-size: 0.9rem;
+}
+
+.task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .field-group {
   margin-bottom: 1.25rem;
 }
@@ -436,6 +540,16 @@ onUnmounted(() => stopInterval())
   font-size: 0.85rem;
   color: var(--text-secondary);
   margin-bottom: 0.4rem;
+}
+
+.notes-textarea {
+  resize: vertical;
+  min-height: 70px;
+  font-family: inherit;
+}
+
+.notes-field-group {
+  width: 100%;
 }
 
 .pomodoro-count-row {
@@ -533,6 +647,35 @@ onUnmounted(() => stopInterval())
 .session-count {
   color: var(--accent);
   font-weight: 600;
+}
+
+.notes-toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0 0.2rem;
+  line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.notes-toggle-btn:hover {
+  opacity: 1;
+}
+
+.session-notes-box {
+  background: var(--bg-secondary);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 6px 6px 0;
+  padding: 0.6rem 0.8rem;
+}
+
+.session-notes-text {
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  margin: 0;
 }
 
 .empty-hint {
