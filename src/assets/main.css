@@ -1,40 +1,124 @@
+/* ── Improved Dark theme ──────────────────────────────────────────────── */
 :root[data-theme="dark"] {
-  --bg-primary: #1A1A2E;
-  --bg-secondary: #16213E;
-  --bg-card: #0F3460;
-  --accent: #6C63FF;
-  --accent-hover: #5A52E0;
-  --text-primary: #E0E0E0;
-  --text-secondary: #A0A0B0;
-  --border: #2A2A4A;
-  --success: #4CAF50;
-  --danger: #FF5252;
+  --bg-primary: #12121A;
+  --bg-secondary: #1C1C28;
+  --bg-card: #22223A;
+  --accent: #7C6FFF;
+  --accent-hover: #6A5EE8;
+  --accent-glow: rgba(124, 111, 255, 0.25);
+  --text-primary: #E8E8F0;
+  --text-secondary: #9090A8;
+  --border: #2E2E48;
+  --success: #50C878;
+  --danger: #F06060;
 }
 
+/* ── Improved Light theme ─────────────────────────────────────────────── */
 :root[data-theme="light"] {
-  --bg-primary: #F0F2F5;
+  --bg-primary: #F4F6FA;
   --bg-secondary: #FFFFFF;
   --bg-card: #FFFFFF;
-  --accent: #6C63FF;
-  --accent-hover: #5A52E0;
-  --text-primary: #1A1A2E;
-  --text-secondary: #666680;
-  --border: #E0E0F0;
-  --success: #4CAF50;
-  --danger: #FF5252;
+  --accent: #6558F5;
+  --accent-hover: #5448D0;
+  --accent-glow: rgba(101, 88, 245, 0.25);
+  --text-primary: #1E1E30;
+  --text-secondary: #606078;
+  --border: #DDE0EE;
+  --success: #3DAF6A;
+  --danger: #E05555;
 }
 
+/* ── Black theme ──────────────────────────────────────────────────────── */
+:root[data-theme="black"] {
+  --bg-primary: #050508;
+  --bg-secondary: #0D0D12;
+  --bg-card: #141420;
+  --accent: #A89CFF;
+  --accent-hover: #9080F0;
+  --accent-glow: rgba(168, 156, 255, 0.25);
+  --text-primary: #DEDEE8;
+  --text-secondary: #808090;
+  --border: #1E1E2E;
+  --success: #5BD08A;
+  --danger: #FF6B6B;
+}
+
+/* ── Green theme ──────────────────────────────────────────────────────── */
+:root[data-theme="green"] {
+  --bg-primary: #0A120E;
+  --bg-secondary: #0F1C15;
+  --bg-card: #162414;
+  --accent: #4ADE80;
+  --accent-hover: #36C46A;
+  --accent-glow: rgba(74, 222, 128, 0.25);
+  --text-primary: #D8F0E0;
+  --text-secondary: #7AAA8A;
+  --border: #1E3828;
+  --success: #4ADE80;
+  --danger: #FF6B6B;
+}
+
+/* ── Pink theme ───────────────────────────────────────────────────────── */
+:root[data-theme="pink"] {
+  --bg-primary: #FDF0F5;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --accent: #E05A8A;
+  --accent-hover: #C8446E;
+  --accent-glow: rgba(224, 90, 138, 0.25);
+  --text-primary: #2A1220;
+  --text-secondary: #885068;
+  --border: #F0C8DC;
+  --success: #3DAF6A;
+  --danger: #CC3355;
+}
+
+/* ── Blue theme ───────────────────────────────────────────────────────── */
+:root[data-theme="blue"] {
+  --bg-primary: #07101E;
+  --bg-secondary: #0E1B2E;
+  --bg-card: #142440;
+  --accent: #4DA6FF;
+  --accent-hover: #3390EE;
+  --accent-glow: rgba(77, 166, 255, 0.25);
+  --text-primary: #D8EAFF;
+  --text-secondary: #708FB8;
+  --border: #1E3258;
+  --success: #50C8A8;
+  --danger: #FF6B70;
+}
+
+/* ── Yellow theme ─────────────────────────────────────────────────────── */
+:root[data-theme="yellow"] {
+  --bg-primary: #141008;
+  --bg-secondary: #1E1800;
+  --bg-card: #28200A;
+  --accent: #F5C842;
+  --accent-hover: #DEB030;
+  --accent-glow: rgba(245, 200, 66, 0.25);
+  --text-primary: #F5EAC8;
+  --text-secondary: #A89060;
+  --border: #382C10;
+  --success: #70C860;
+  --danger: #FF6B50;
+}
+
+/* ── Fallback (same as dark) ──────────────────────────────────────────── */
 :root {
-  --bg-primary: #1A1A2E;
-  --bg-secondary: #16213E;
-  --bg-card: #0F3460;
-  --accent: #6C63FF;
-  --accent-hover: #5A52E0;
-  --text-primary: #E0E0E0;
-  --text-secondary: #A0A0B0;
-  --border: #2A2A4A;
-  --success: #4CAF50;
-  --danger: #FF5252;
+  --bg-primary: #12121A;
+  --bg-secondary: #1C1C28;
+  --bg-card: #22223A;
+  --accent: #7C6FFF;
+  --accent-hover: #6A5EE8;
+  --accent-glow: rgba(124, 111, 255, 0.25);
+  --text-primary: #E8E8F0;
+  --text-secondary: #9090A8;
+  --border: #2E2E48;
+  --success: #50C878;
+  --danger: #F06060;
+  /* Mobile layout offsets — must match the bottom nav height */
+  --mobile-top-offset: 5.5rem;
+  --mobile-bottom-offset: 5rem;
 }
 
 * {
@@ -198,6 +282,32 @@ body {
   .main-content {
     margin-left: 0;
     padding: 1rem;
-    padding-top: 5rem;
+    padding-top: var(--mobile-top-offset);
+    padding-bottom: var(--mobile-bottom-offset);
+  }
+
+  .card {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn {
+    min-height: 44px;
+  }
+
+  .add-task-row {
+    flex-direction: column;
+  }
+
+  .add-task-row .input {
+    width: 100%;
+  }
+
+  .timer-display {
+    font-size: 1.4rem;
   }
 }

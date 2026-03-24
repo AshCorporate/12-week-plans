@@ -18,7 +18,7 @@
       <text x="24" y="28" text-anchor="middle" fill="#6C63FF" font-size="10" font-weight="bold" font-family="Inter,sans-serif">VM</text>
     </svg>
     <div class="logo-text">
-      <span class="logo-name">Vis Metod</span>
+      <span class="logo-name">Vis Method</span>
       <span class="logo-sub">метод</span>
     </div>
   </div>
