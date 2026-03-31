@@ -9,6 +9,10 @@ function nowISO() {
   return new Date().toISOString()
 }
 
+// SM-2 algorithm constants
+const SM2_MIN_EASE = 1.3
+const SM2_MAX_EASE = 3.0
+
 // SM-2 algorithm
 function sm2(card, quality) {
   // quality: 0 (fail), 1 (hard), 2 (ok), 3 (easy), 4 (perfect)
@@ -28,11 +32,11 @@ function sm2(card, quality) {
     }
     repetitions++
     ease = ease + (0.1 - (4 - quality) * (0.08 + (4 - quality) * 0.02))
-    if (ease < 1.3) ease = 1.3
+    if (ease < SM2_MIN_EASE) ease = SM2_MIN_EASE
     if (quality === 3) interval = Math.round(interval * 1.1)
     if (quality === 4) {
       interval = Math.round(interval * 1.2)
-      ease = Math.min(ease + 0.1, 3.0)
+      ease = Math.min(ease + 0.1, SM2_MAX_EASE)
     }
   }
 

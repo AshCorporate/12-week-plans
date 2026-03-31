@@ -81,6 +81,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useKnowledgeStore } from '../stores/knowledge.js'
+import { pluralRu } from '../utils/pluralize.js'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -141,9 +142,7 @@ function close() {
 }
 
 function pluralCards(n) {
-  if (n % 10 === 1 && n % 100 !== 11) return 'у'
-  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'и'
-  return ''
+  return pluralRu(n, ['у', 'и', ''])
 }
 
 function onKeyDown(e) {

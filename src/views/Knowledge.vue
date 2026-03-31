@@ -194,6 +194,7 @@ import { useKnowledgeStore } from '../stores/knowledge.js'
 import NoteEditor from '../components/NoteEditor.vue'
 import FlashcardReview from '../components/FlashcardReview.vue'
 import NoteCard from '../components/NoteCard.vue'
+import { pluralRu } from '../utils/pluralize.js'
 
 const store = useKnowledgeStore()
 
@@ -289,9 +290,7 @@ function startReview() {
 }
 
 function pluralCards(n) {
-  if (n % 10 === 1 && n % 100 !== 11) return 'а'
-  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'и'
-  return ''
+  return pluralRu(n, ['а', 'и', ''])
 }
 </script>
 

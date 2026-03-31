@@ -119,6 +119,7 @@
 import { ref, computed } from 'vue'
 import { usePomodoroStore } from '../stores/pomodoro.js'
 import { useTasksStore } from '../stores/tasks.js'
+import { pluralRu } from '../utils/pluralize.js'
 
 const pomodoroStore = usePomodoroStore()
 const tasksStore = useTasksStore()
@@ -281,14 +282,12 @@ const currentStreak = computed(() => {
 })
 
 function pluralDays(n) {
-  if (n % 10 === 1 && n % 100 !== 11) return 'день'
-  if ([2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100)) return 'дня'
-  return 'дней'
+  return pluralRu(n, ['день', 'дня', 'дней'])
 }
 
 // --- Week comparison vs previous ---
 const weekComparison = computed(() => {
-  const curPomodoros = weekMetrics.value.totalPomodoros
+  const currentPomodoros = weekMetrics.value.totalPomodoros
   // previous week
   const prevMonday = getMondayOf(new Date())
   prevMonday.setDate(prevMonday.getDate() - 7)
