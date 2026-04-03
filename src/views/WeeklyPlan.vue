@@ -57,13 +57,11 @@ const currentWeek = computed(() => {
 })
 
 const endOfWeek = computed(() => {
-  const now = new Date()
-  const day = now.getDay()
-  const daysUntilSunday = day === 0 ? 0 : 7 - day
-  const sunday = new Date(now)
-  sunday.setDate(now.getDate() + daysUntilSunday)
-  sunday.setHours(23, 59, 59, 999)
-  return sunday.getTime()
+  const start = new Date(settings.startDate)
+  const weekEndDate = new Date(start)
+  weekEndDate.setDate(start.getDate() + currentWeek.value * 7 - 1)
+  weekEndDate.setHours(23, 59, 59, 999)
+  return weekEndDate.getTime()
 })
 
 const tasks = computed(() => weeklyStore.getWeekTasks(currentWeek.value))

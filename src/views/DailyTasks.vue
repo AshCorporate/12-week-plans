@@ -166,8 +166,6 @@ const activeTaskName = computed(() => {
   return task?.text ?? ''
 })
 
-const activePhaseLabel = computed(() => '🍅 Работа')
-
 const pomodoroDisplay = computed(() => {
   if (!tasksStore.activeTimer) return '25:00'
   let remaining

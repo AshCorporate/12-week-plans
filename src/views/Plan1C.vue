@@ -138,6 +138,138 @@
       </div>
     </section>
 
+    <!-- Interactive Weekly Goals -->
+    <section class="section">
+      <h2 class="section-title">✅ Еженедельные цели (интерактивно)</h2>
+      <div class="accordion-list">
+        <div
+          v-for="wNum in 6"
+          :key="wNum"
+          class="accordion-item card"
+          :class="{ 'week-active': wNum === currentWeek1c }"
+        >
+          <div class="accordion-header" @click="toggleWeeklyGoals(wNum)">
+            <div class="interactive-week-header-left">
+              <span class="interactive-week-badge" :class="wNum === currentWeek1c ? 'badge-current' : ''">Неделя {{ wNum }}</span>
+              <span class="interactive-week-progress-text">
+                {{ plan1cStore.getWeeklyTasks(wNum).filter(t => t.done).length }} /
+                {{ plan1cStore.getWeeklyTasks(wNum).length }}
+              </span>
+            </div>
+            <div class="interactive-week-bar-wrap">
+              <div
+                class="progress-bar-wrap"
+                style="flex: 1"
+              >
+                <div
+                  class="progress-bar-fill"
+                  :style="{
+                    width: plan1cStore.getWeeklyTasks(wNum).length > 0
+                      ? (plan1cStore.getWeeklyTasks(wNum).filter(t => t.done).length / plan1cStore.getWeeklyTasks(wNum).length * 100) + '%'
+                      : '0%'
+                  }"
+                ></div>
+              </div>
+            </div>
+            <span class="accordion-toggle">{{ openWeeklyGoals.includes(wNum) ? '▲' : '▼' }}</span>
+          </div>
+          <div v-if="openWeeklyGoals.includes(wNum)" class="accordion-body">
+            <div class="weekly-task-list">
+              <label
+                v-for="task in plan1cStore.getWeeklyTasks(wNum)"
+                :key="task.id"
+                class="interactive-task-row"
+              >
+                <input
+                  type="checkbox"
+                  :checked="task.done"
+                  @change="plan1cStore.toggleWeeklyTask(wNum, task.id)"
+                />
+                <span :class="{ 'done-text': task.done }">{{ task.text }}</span>
+                <button
+                  class="btn btn-ghost btn-icon-xs"
+                  @click.prevent="plan1cStore.deleteWeeklyTask(wNum, task.id)"
+                  title="Удалить"
+                >🗑️</button>
+              </label>
+            </div>
+            <div class="add-task-row" style="margin-top: 0.75rem">
+              <input
+                v-model="newWeeklyTaskText[wNum]"
+                class="input"
+                placeholder="Добавить цель..."
+                @keydown.enter="addWeeklyTask(wNum)"
+              />
+              <button class="btn btn-primary btn-sm" @click="addWeeklyTask(wNum)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Daily Tasks -->
+    <section class="section">
+      <h2 class="section-title">📅 Задачи на сегодня (интерактивно)</h2>
+      <div class="card daily-panel">
+        <div class="daily-panel-header">
+          <div>
+            <div class="daily-date-label">{{ todayLabel }}</div>
+            <div class="daily-day-label">День {{ todayDayNum }} недели {{ currentWeek1c }}</div>
+          </div>
+          <div class="daily-progress-info">
+            <span class="daily-progress-text">
+              {{ plan1cStore.getDailyTasks(todayKey).filter(t => t.done).length }} /
+              {{ plan1cStore.getDailyTasks(todayKey).length }}
+            </span>
+            <div class="progress-bar-wrap" style="width: 120px">
+              <div
+                class="progress-bar-fill"
+                :style="{
+                  width: plan1cStore.getDailyTasks(todayKey).length > 0
+                    ? (plan1cStore.getDailyTasks(todayKey).filter(t => t.done).length / plan1cStore.getDailyTasks(todayKey).length * 100) + '%'
+                    : '0%'
+                }"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="plan1cStore.getDailyTasks(todayKey).length === 0" class="empty-state-inline">
+          Нет задач на сегодня
+        </div>
+
+        <div class="weekly-task-list" style="margin-top: 0.75rem">
+          <label
+            v-for="task in plan1cStore.getDailyTasks(todayKey)"
+            :key="task.id"
+            class="interactive-task-row"
+          >
+            <input
+              type="checkbox"
+              :checked="task.done"
+              @change="plan1cStore.toggleDailyTask(todayKey, task.id)"
+            />
+            <span :class="{ 'done-text': task.done }">{{ task.text }}</span>
+            <button
+              class="btn btn-ghost btn-icon-xs"
+              @click.prevent="plan1cStore.deleteDailyTask(todayKey, task.id)"
+              title="Удалить"
+            >🗑️</button>
+          </label>
+        </div>
+
+        <div class="add-task-row" style="margin-top: 0.75rem">
+          <input
+            v-model="newDailyTaskText"
+            class="input"
+            placeholder="Добавить задачу на сегодня..."
+            @keydown.enter="addDailyTask"
+          />
+          <button class="btn btn-primary btn-sm" @click="addDailyTask">+</button>
+        </div>
+      </div>
+    </section>
+
     <!-- Detailed Weekly Plan Accordion -->
     <section class="section">
       <h2 class="section-title">📋 Детальный план по неделям</h2>
@@ -166,10 +298,40 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useSettingsStore } from '../stores/settings.js'
+import { usePlan1cTasksStore } from '../stores/plan1cTasks.js'
+
+const settings = useSettingsStore()
+const plan1cStore = usePlan1cTasksStore()
 
 const openWeeks = ref([])
 const openDetails = ref([])
+const openWeeklyGoals = ref([])
+const newWeeklyTaskText = ref({})
+const newDailyTaskText = ref('')
+
+const currentWeek1c = computed(() => {
+  const now = Date.now()
+  const start = new Date(settings.startDate).getTime()
+  const diff = now - start
+  const week = Math.floor(diff / (7 * 24 * 3600 * 1000)) + 1
+  return Math.max(1, Math.min(week, 6))
+})
+
+const todayKey = computed(() => new Date().toISOString().split('T')[0])
+
+const todayLabel = computed(() =>
+  new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+)
+
+const todayDayNum = computed(() => {
+  const start = new Date(settings.startDate)
+  const today = new Date(todayKey.value)
+  const diffMs = today.getTime() - start.getTime()
+  const diffDays = Math.floor(diffMs / (24 * 3600 * 1000))
+  return (diffDays % 7) + 1
+})
 
 function toggleWeek(num) {
   const idx = openWeeks.value.indexOf(num)
@@ -181,6 +343,28 @@ function toggleDetail(num) {
   const idx = openDetails.value.indexOf(num)
   if (idx === -1) openDetails.value.push(num)
   else openDetails.value.splice(idx, 1)
+}
+
+function toggleWeeklyGoals(num) {
+  const idx = openWeeklyGoals.value.indexOf(num)
+  if (idx === -1) openWeeklyGoals.value.push(num)
+  else openWeeklyGoals.value.splice(idx, 1)
+}
+
+function addWeeklyTask(weekNum) {
+  const text = (newWeeklyTaskText.value[weekNum] || '').trim()
+  if (text) {
+    plan1cStore.addWeeklyTask(weekNum, text)
+    newWeeklyTaskText.value[weekNum] = ''
+  }
+}
+
+function addDailyTask() {
+  const text = newDailyTaskText.value.trim()
+  if (text) {
+    plan1cStore.addDailyTask(todayKey.value, text, currentWeek1c.value, todayDayNum.value)
+    newDailyTaskText.value = ''
+  }
 }
 
 const pomodoroItems = [
@@ -1046,4 +1230,142 @@ const detailedWeeks = [
     padding: 1.25rem;
   }
 }
+/* Interactive sections */
+.interactive-week-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.interactive-week-badge {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.badge-current {
+  color: var(--accent);
+}
+
+.interactive-week-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.interactive-week-bar-wrap {
+  flex: 1;
+  min-width: 60px;
+  margin: 0 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.week-active > .accordion-header {
+  border-left: 3px solid var(--accent);
+  padding-left: calc(1.25rem - 3px);
+}
+
+.weekly-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.interactive-task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.interactive-task-row:hover {
+  background: var(--bg-secondary);
+}
+
+.interactive-task-row input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.interactive-task-row span {
+  flex: 1;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.btn-icon-xs {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.interactive-task-row:hover .btn-icon-xs {
+  opacity: 1;
+}
+
+.daily-panel {
+  padding: 1.25rem;
+}
+
+.daily-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.daily-date-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+.daily-day-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-top: 0.2rem;
+}
+
+.daily-progress-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.daily-progress-text {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.empty-state-inline {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 0.75rem 0;
+}
+
+.done-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.btn-sm {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+}
+
 </style>
