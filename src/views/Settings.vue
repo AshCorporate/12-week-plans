@@ -1,9 +1,9 @@
 <template>
   <div class="settings-view">
-    <h1 class="page-title">⚙️ Настройки</h1>
+    <h1 class="page-title">Настройки</h1>
 
     <div class="card settings-card">
-      <h3>Начало 12-недельного цикла</h3>
+      <h3>Начало 56-дневного марафона</h3>
       <div class="field-row">
         <input type="date" class="input" v-model="settings.startDate" />
       </div>
@@ -17,7 +17,6 @@
           :key="t.id"
           class="theme-card"
           :class="{ 'theme-card--active': settings.theme === t.id }"
-          :style="{ '--tc-bg': t.bg, '--tc-accent': t.accent }"
           @click="settings.theme = t.id"
         >
           <span class="theme-swatch">
@@ -32,7 +31,7 @@
     <div class="card settings-card danger-card">
       <h3>Сброс данных</h3>
       <p class="danger-desc">Удалить все задачи, планы и сбросить настройки.</p>
-      <button class="btn btn-danger" @click="confirmReset">🗑️ Сбросить все данные</button>
+      <button class="btn btn-danger" @click="confirmReset">Сбросить все данные</button>
     </div>
   </div>
 </template>
@@ -43,13 +42,10 @@ import { useSettingsStore } from '../stores/settings.js'
 const settings = useSettingsStore()
 
 const themes = [
-  { id: 'dark',   label: 'Тёмная',   bg: '#12121A', accent: '#7C6FFF' },
-  { id: 'light',  label: 'Светлая',  bg: '#F4F6FA', accent: '#6558F5' },
-  { id: 'black',  label: 'Чёрная',   bg: '#050508', accent: '#A89CFF' },
-  { id: 'green',  label: 'Зелёная',  bg: '#0A120E', accent: '#4ADE80' },
-  { id: 'pink',   label: 'Розовая',  bg: '#FDF0F5', accent: '#E05A8A' },
-  { id: 'blue',   label: 'Синяя',    bg: '#07101E', accent: '#4DA6FF' },
-  { id: 'yellow', label: 'Жёлтая',   bg: '#141008', accent: '#F5C842' },
+  { id: 'bw-dark',  label: 'Чёрно-белая (тёмная)',  bg: '#0A0A0A', accent: '#FFFFFF' },
+  { id: 'bw-light', label: 'Чёрно-белая (светлая)', bg: '#F8F8F8', accent: '#111111' },
+  { id: 'mountain', label: 'Горная',                 bg: '#0E0C0A', accent: '#C8A882' },
+  { id: 'oceanic',  label: 'Океаническая',           bg: '#060C14', accent: '#4DC8C8' },
 ]
 
 function confirmReset() {

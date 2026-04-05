@@ -2,9 +2,8 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 import DailyTracker from '../views/DailyTracker.vue'
 import DailyTasks from '../views/DailyTasks.vue'
-import WeeklyPlan from '../views/WeeklyPlan.vue'
-import MonthlyPlan from '../views/MonthlyPlan.vue'
-import YearPlan from '../views/YearPlan.vue'
+import Marathon from '../views/Marathon.vue'
+import RulesOfPath from '../views/RulesOfPath.vue'
 import Settings from '../views/Settings.vue'
 import PomodoroTimer from '../views/PomodoroTimer.vue'
 import ProductivityTracker from '../views/ProductivityTracker.vue'
@@ -16,9 +15,8 @@ const routes = [
   { path: '/', component: Dashboard },
   { path: '/tracker', component: DailyTracker },
   { path: '/daily', component: DailyTasks },
-  { path: '/weekly', component: WeeklyPlan },
-  { path: '/monthly', component: MonthlyPlan },
-  { path: '/yearly', component: YearPlan },
+  { path: '/marathon', component: Marathon },
+  { path: '/rules', component: RulesOfPath },
   { path: '/settings', component: Settings },
   { path: '/pomodoro', component: PomodoroTimer },
   { path: '/productivity', component: ProductivityTracker },

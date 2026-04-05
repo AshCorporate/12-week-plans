@@ -1,326 +1,47 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
-import { useSettingsStore } from './settings.js'
-
-// Tasks data mirrored from Plan1C.vue detailedWeeks
-const detailedWeeks = [
-  {
-    num: 1,
-    title: 'Вход в платформу и базовые объекты',
-    topics: [
-      'Установка и настройка 1С:Предприятие 8.3',
-      'Конфигуратор: структура конфигурации',
-      'Справочник Контрагенты — создание, реквизиты, формы',
-      'Справочник Номенклатура — группы, артикул, ед.изм',
-      'Документ Поступление товаров — шапка, ТЧ, проведение',
-      'Регистр сведений: установка цен',
-      'Первичное резюме — Google Docs / hh.ru',
-    ],
-    days: [
-      {
-        day: 1,
-        title: 'Установка и первый запуск',
-        tasks: [
-          'P1–P4: Установка 1С 8.3, создание учебной ИБ, интерфейс конфигуратора',
-          'P5–P8: Создание первого справочника «Контрагенты» с реквизитами',
-          'P9–P10: Скрин справочника в README на GitHub',
-          'P11–P12: Зарегистрироваться на hh.ru, изучить 5 вакансий junior 1С',
-          'P13: Пройти тест по интерфейсу конфигуратора (v8.1c.ru)',
-          'P14: Записать что сделал, план на завтра',
-        ],
-      },
-      {
-        day: 2,
-        title: 'Справочник Номенклатура',
-        tasks: [
-          'P1–P4: Теория — иерархические справочники, группы, подчинённые',
-          'P5–P8: Создать справочник Номенклатура: артикул, ед.изм., группы',
-          'P9–P10: Обновить README, добавить скрины формы справочника',
-          'P11–P12: Составить базовое резюме v1 в Google Docs',
-          'P13: Тест по объектам метаданных',
-          'P14: Ретроспектива дня',
-        ],
-      },
-      {
-        day: 3,
-        title: 'Документ Поступление товаров',
-        tasks: [
-          'P1–P4: Теория — документы, реквизиты шапки, табличные части',
-          'P5–P8: Создать документ Поступление: шапка (контрагент, дата), ТЧ (номенклатура, кол-во, цена)',
-          'P9–P10: README: описать структуру документа',
-          'P11–P12: Опубликовать резюме на hh.ru',
-          'P13: Тест «документы и ТЧ»',
-          'P14: Дневник',
-        ],
-      },
-      {
-        day: 4,
-        title: 'Регистр сведений: Цены',
-        tasks: [
-          'P1–P4: Теория — регистры сведений, отличие от накопления',
-          'P5–P8: Создать регистр сведений ЦеныНоменклатуры, привязать к документу УстановкаЦен',
-          'P9–P10: Портфолио: добавить регистр в описание проекта',
-          'P11–P12: Изучить ещё 5 вакансий, выписать требования',
-          'P13: Задача на регистр сведений',
-          'P14: Ретроспектива',
-        ],
-      },
-      {
-        day: 5,
-        title: 'Проведение и формы',
-        tasks: [
-          'P1–P4: Теория — процедура ОбработкаПроведения, управляемые формы',
-          'P5–P8: Написать проведение для Поступления, настроить форму документа',
-          'P9–P10: Обновить README, добавить схему проекта',
-          'P11–P12: Отправить первые 2 отклика на hh.ru',
-          'P13: Практика: написать простой запрос к регистру',
-          'P14: Дневник дня',
-        ],
-      },
-      {
-        day: 6,
-        title: 'Отчёт по остаткам (СКД)',
-        tasks: [
-          'P1–P4: Теория — схема компоновки данных, источники данных',
-          'P5–P8: Создать отчёт ОстаткиТоваров на базе СКД',
-          'P9–P10: Финализировать проект 1 в портфолио (скрины отчёта)',
-          'P11–P12: Обновить резюме, добавить проект 1',
-          'P13: Тест по СКД',
-          'P14: Ретроспектива недели (кратко)',
-        ],
-      },
-      {
-        day: 7,
-        title: 'Итоги недели 1',
-        tasks: [
-          'P1–P4: Повторить все темы недели 1: справочники, документы, регистры, формы, проведение, СКД',
-          'P5–P8: Зафиксировать и дополнить проект 1, написать модульный тест логики',
-          'P9–P10: Оформить итоговый README проекта 1 (v1.0)',
-          'P11–P12: Изучить рынок вакансий, составить список компаний',
-          'P13: Решить 3 задачи на запросы',
-          'P14: Полная ретроспектива недели, план на неделю 2',
-        ],
-      },
-    ],
-  },
-  {
-    num: 2,
-    title: 'Регистры накопления, движения, запросы, СКД',
-    topics: [
-      'Регистр накопления ТоварыНаСкладах',
-      'Движения документов, проведение',
-      'Язык запросов 1С — выборки, условия, итоги',
-      'Схема компоновки данных — отчёт по остаткам',
-      'Документ Реализация товаров',
-      'Роли: менеджер / кладовщик / администратор',
-      'Портфолио: README + скрины + GitHub',
-    ],
-    days: [
-      { day: 1, title: 'Регистр накопления', tasks: ['Теория: виды регистров, измерения/ресурсы', 'Создать ТоварыНаСкладах', 'Отклик x2, портфолио'] },
-      { day: 2, title: 'Движения документов', tasks: ['Теория: набор записей, проведение', 'Реализовать движения для Поступления', 'Портфолио update'] },
-      { day: 3, title: 'Документ Реализация', tasks: ['Создать документ Реализация с движениями расхода', 'Проверить остатки через запрос', 'Отклики x2'] },
-      { day: 4, title: 'Запросы: выборки, условия, итоги', tasks: ['Практика запросов: ВЫБРАТЬ, ГДЕ, ИТОГИ', 'Запрос остатков по складу', 'Тест по запросам'] },
-      { day: 5, title: 'Запросы: соединения, вложенные', tasks: ['ЛЕВОЕ СОЕДИНЕНИЕ, вложенные запросы', 'Запрос продаж по контрагентам', 'Отклики x3'] },
-      { day: 6, title: 'СКД: отчёт по продажам', tasks: ['Отчёт ПродажиПоКонтрагентам на СКД', 'Группировки, отборы, оформление', 'Обновить README проекта'] },
-      { day: 7, title: 'Итоги недели 2', tasks: ['Финализировать проект «Склад/Продажи» v1.0', 'Роли: менеджер/кладовщик/админ', 'Ретроспектива + план на неделю 3', 'Отклики x3'] },
-    ],
-  },
-  {
-    num: 3,
-    title: 'Управляемые формы, клиент-сервер, CRM light',
-    topics: [
-      'Управляемые формы — клиентский/серверный контекст',
-      'Директивы &НаКлиенте, &НаСервере, &НаКлиентеНаСервере',
-      'Справочник Клиенты, документ ЗаказКлиента',
-      'Бизнес-статусы и переходы между ними',
-      'Отчёт по воронке / статусам / просроченным',
-      'Проверки заполнения формы',
-      'Ежедневные отклики на вакансии',
-    ],
-    days: [
-      { day: 1, title: 'Управляемые формы', tasks: ['Теория клиент-серверного взаимодействия', 'Директивы &НаКлиенте/&НаСервере', 'Отклики x3'] },
-      { day: 2, title: 'Справочник Клиенты', tasks: ['Создать Клиенты с реквизитами', 'Кастомная форма списка', 'Портфолио update'] },
-      { day: 3, title: 'Документ ЗаказКлиента', tasks: ['Создать заказ, ТЧ, статусы', 'Бизнес-логика смены статусов', 'Отклики x3'] },
-      { day: 4, title: 'Проверки заполнения', tasks: ['ПроверкаЗаполнения, программные проверки', 'Подсветка незаполненных полей', 'Первая отработка вопросов собеседования'] },
-      { day: 5, title: 'Отчёт по воронке', tasks: ['СКД: воронка статусов, просроченные', 'Отбор по менеджеру, периоду', 'Отклики x3'] },
-      { day: 6, title: 'Напоминания/Обработки', tasks: ['Регламентные задания или обработки', 'Отправка напоминания по заказам', 'Портфолио проекта 2'] },
-      { day: 7, title: 'Итоги недели 3', tasks: ['Финализировать проект «Заказы/CRM»', 'Ретроспектива + план на неделю 4', 'Отклики x5', '10 вопросов собеседования'] },
-    ],
-  },
-  {
-    num: 4,
-    title: 'Уровень junior: отладка, производительность, проект 3',
-    topics: [
-      'Отладчик 1С — точки останова, просмотр переменных',
-      'Профилировщик запросов, план запроса',
-      'Проект 3: Финансовый учёт (ДДС, cashflow)',
-      'Регистр накопления ДенежныеСредства',
-      'Отчёт план-факт по периоду',
-      '30 вопросов/ответов для собеседования',
-      'Оформление всех 3 проектов в портфолио',
-    ],
-    days: [
-      { day: 1, title: 'Отладчик 1С', tasks: ['Точки останова, стек вызовов, просмотр переменных', 'Найти и исправить баг в старом проекте', 'Отклики x3'] },
-      { day: 2, title: 'Профилировщик запросов', tasks: ['Анализ плана запроса', 'Оптимизировать медленный запрос', 'Начать проект 3 (финансы)'] },
-      { day: 3, title: 'Проект 3: структура', tasks: ['Статьи ДДС, регистр ДенежныеСредства', 'ПоступлениеДС / СписаниеДС', 'Отклики x3'] },
-      { day: 4, title: 'Отчёт cashflow', tasks: ['СКД cashflow по статьям и периодам', 'План-факт сравнение', 'Тест и задачи к сертификату'] },
-      { day: 5, title: 'Аналитика', tasks: ['Детализация аналитики финансов', 'Доработка форм и отчётов', 'Отклики x5'] },
-      { day: 6, title: 'Завершение проекта 3', tasks: ['Финализация финансового проекта', 'README и скрины', '15 вопросов собеседования'] },
-      { day: 7, title: 'Итоги недели 4', tasks: ['3 проекта + 30 вопросов/ответов', 'Ретроспектива', 'Отклики x5', 'Тест сертификации'] },
-    ],
-  },
-  {
-    num: 5,
-    title: 'Режим «получить оффер»',
-    topics: [
-      'Массовые отклики: 8–10 в день',
-      'Подготовка к техническим собеседованиям',
-      'Финальное оформление 3 проектов',
-      '50 вопросов/ответов на собеседование',
-      'Подготовка к задачам на сертификат 1С:Специалист',
-    ],
-    days: [
-      { day: 1, title: 'Интенсивные отклики', tasks: ['8–10 откликов в день', 'Подготовка кейсов для собеседований', 'Задачи сертификации'] },
-      { day: 2, title: 'Техническое собеседование', tasks: ['Практика live coding 1С', 'Разбор ошибок и доработка', 'Отклики x8'] },
-      { day: 3, title: 'Финальные доработки портфолио', tasks: ['Чистый код, документация', 'Скрины и видео-демо', 'Отклики x8'] },
-      { day: 4, title: 'Вопросы собеседования', tasks: ['40 вопросов/ответов', 'Практика объяснения проектов', 'Отклики x8'] },
-      { day: 5, title: 'Анализ фидбэка', tasks: ['Доработки по фидбэку рекрутеров', 'Задачи к сертификату', 'Отклики x8'] },
-      { day: 6, title: 'Прокачка слабых мест', tasks: ['Повторить сложные темы', '50 вопросов/ответов', 'Отклики x8'] },
-      { day: 7, title: 'Итоги недели 5', tasks: ['40–50 откликов суммарно за неделю', 'Ретроспектива', 'Подготовка к финальным собесам'] },
-    ],
-  },
-  {
-    num: 6,
-    title: 'Финальный штурм: собесы + сертификат',
-    topics: [
-      'Технические собеседования — практика, фидбэк',
-      'Решение задач уровня 1С:Специалист',
-      'Повторение всех ключевых тем',
-      'Переговоры и выбор оффера',
-      'Подготовка к экзамену на сертификат',
-    ],
-    days: [
-      { day: 1, title: 'Финальные собесы', tasks: ['Технические собеседования', 'Анализ результатов', 'Отклики x5'] },
-      { day: 2, title: 'Задачи на сертификат', tasks: ['Решение задач уровня 1С:Специалист', 'Повторение запросов и СКД', 'Собесы'] },
-      { day: 3, title: 'Переговоры и офферы', tasks: ['Переговоры по условиям', 'Принятие решения', 'Задачи сертификации'] },
-      { day: 4, title: 'Итоговое повторение', tasks: ['Повтор всех 20 тем собеседования', 'Финальная подготовка к экзамену', 'Офферы / доп. собесы'] },
-      { day: 5, title: 'Экзамен 1С:Специалист', tasks: ['Подготовка к сдаче сертификата', 'Финальные правки в портфолио'] },
-      { day: 6, title: 'Итоги и следующий шаг', tasks: ['Принятие оффера или продолжение поиска', 'Итоговая ретроспектива 6 недель'] },
-      { day: 7, title: 'Финал', tasks: ['Документирование опыта', 'Plan B и следующие цели', 'Отдых'] },
-    ],
-  },
-]
 
 export const usePlan1cTasksStore = defineStore('plan1cTasks', () => {
   const stored = JSON.parse(localStorage.getItem('vis-plan1c') || '{}')
-  const dailyTasksByDate = ref(stored.dailyTasksByDate || {})
-  const weeklyTasksByWeek = ref(stored.weeklyTasksByWeek || {})
 
-  watch([dailyTasksByDate, weeklyTasksByWeek], () => {
+  // subtasksDone: { 'day-N': { taskIndex: boolean } }
+  const subtasksDone = ref(stored.subtasksDone || {})
+
+  // reportFilled: { 'day-N': boolean }
+  const reportFilled = ref(stored.reportFilled || {})
+
+  watch([subtasksDone, reportFilled], () => {
     localStorage.setItem('vis-plan1c', JSON.stringify({
-      dailyTasksByDate: dailyTasksByDate.value,
-      weeklyTasksByWeek: weeklyTasksByWeek.value,
+      subtasksDone: subtasksDone.value,
+      reportFilled: reportFilled.value,
     }))
   }, { deep: true })
 
-  function seedIfEmpty() {
-    if (
-      Object.keys(dailyTasksByDate.value).length === 0 &&
-      Object.keys(weeklyTasksByWeek.value).length === 0
-    ) {
-      const settings = useSettingsStore()
-      const startDate = new Date(settings.startDate)
-
-      detailedWeeks.forEach(week => {
-        const weekKey = `week-${week.num}`
-        weeklyTasksByWeek.value[weekKey] = week.topics.map(topic => ({
-          id: crypto.randomUUID(),
-          text: topic,
-          done: false,
-        }))
-
-        week.days.forEach(day => {
-          const dayOffset = (week.num - 1) * 7 + (day.day - 1)
-          const date = new Date(startDate)
-          date.setDate(startDate.getDate() + dayOffset)
-          const dateKey = date.toISOString().split('T')[0]
-          dailyTasksByDate.value[dateKey] = day.tasks.map(task => ({
-            id: crypto.randomUUID(),
-            text: task,
-            done: false,
-            weekNum: week.num,
-            dayNum: day.day,
-          }))
-        })
-      })
-    }
+  function toggleSubtask(dayNumber, taskIndex) {
+    const key = `day-${dayNumber}`
+    if (!subtasksDone.value[key]) subtasksDone.value[key] = {}
+    subtasksDone.value[key][taskIndex] = !subtasksDone.value[key][taskIndex]
   }
 
-  seedIfEmpty()
-
-  function getDailyTasks(dateKey) {
-    if (!dailyTasksByDate.value[dateKey]) dailyTasksByDate.value[dateKey] = []
-    return dailyTasksByDate.value[dateKey]
+  function isSubtaskDone(dayNumber, taskIndex) {
+    const key = `day-${dayNumber}`
+    return !!(subtasksDone.value[key] && subtasksDone.value[key][taskIndex])
   }
 
-  function getWeeklyTasks(weekNum) {
-    const key = `week-${weekNum}`
-    if (!weeklyTasksByWeek.value[key]) weeklyTasksByWeek.value[key] = []
-    return weeklyTasksByWeek.value[key]
+  function setReportFilled(dayNumber, value) {
+    reportFilled.value[`day-${dayNumber}`] = value
   }
 
-  function toggleDailyTask(dateKey, id) {
-    const tasks = getDailyTasks(dateKey)
-    const task = tasks.find(t => t.id === id)
-    if (task) task.done = !task.done
-  }
-
-  function toggleWeeklyTask(weekNum, id) {
-    const tasks = getWeeklyTasks(weekNum)
-    const task = tasks.find(t => t.id === id)
-    if (task) task.done = !task.done
-  }
-
-  function addDailyTask(dateKey, text, weekNum, dayNum) {
-    if (!dailyTasksByDate.value[dateKey]) dailyTasksByDate.value[dateKey] = []
-    dailyTasksByDate.value[dateKey].push({
-      id: crypto.randomUUID(),
-      text,
-      done: false,
-      weekNum: weekNum ?? null,
-      dayNum: dayNum ?? null,
-    })
-  }
-
-  function addWeeklyTask(weekNum, text) {
-    const key = `week-${weekNum}`
-    if (!weeklyTasksByWeek.value[key]) weeklyTasksByWeek.value[key] = []
-    weeklyTasksByWeek.value[key].push({ id: crypto.randomUUID(), text, done: false })
-  }
-
-  function deleteDailyTask(dateKey, id) {
-    if (dailyTasksByDate.value[dateKey]) {
-      dailyTasksByDate.value[dateKey] = dailyTasksByDate.value[dateKey].filter(t => t.id !== id)
-    }
-  }
-
-  function deleteWeeklyTask(weekNum, id) {
-    const key = `week-${weekNum}`
-    if (weeklyTasksByWeek.value[key]) {
-      weeklyTasksByWeek.value[key] = weeklyTasksByWeek.value[key].filter(t => t.id !== id)
-    }
+  function isReportFilled(dayNumber) {
+    return !!reportFilled.value[`day-${dayNumber}`]
   }
 
   return {
-    dailyTasksByDate,
-    weeklyTasksByWeek,
-    getDailyTasks,
-    getWeeklyTasks,
-    toggleDailyTask,
-    toggleWeeklyTask,
-    addDailyTask,
-    addWeeklyTask,
-    deleteDailyTask,
-    deleteWeeklyTask,
+    subtasksDone,
+    reportFilled,
+    toggleSubtask,
+    isSubtaskDone,
+    setReportFilled,
+    isReportFilled,
   }
 })
