@@ -1,3 +1,26 @@
+/* ── Premium Lavender Light theme ─────────────────────────────────────── */
+:root[data-theme="premium-lavender"] {
+  --bg-primary: #F8F7FF;
+  --bg-secondary: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F0EEFF;
+  --accent: #7C6FFF;
+  --accent-hover: #6B5FEF;
+  --accent-glow: rgba(124, 111, 255, 0.20);
+  --accent-subtle: rgba(124, 111, 255, 0.08);
+  --text-primary: #1A1730;
+  --text-secondary: #6B6B8A;
+  --border: rgba(124, 111, 255, 0.12);
+  --border-strong: rgba(124, 111, 255, 0.22);
+  --success: #10B981;
+  --danger: #EF4444;
+  --shadow-card: 0 2px 16px rgba(124, 111, 255, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 8px 32px rgba(124, 111, 255, 0.15), 0 2px 8px rgba(0, 0, 0, 0.06);
+  --teal: #2DD4BF;
+  --coral: #FB7185;
+  --blue: #6366F1;
+}
+
 /* ── Black & White Dark theme ─────────────────────────────────────────── */
 :root[data-theme="bw-dark"] {
   --bg-primary: #0A0A0A;

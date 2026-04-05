@@ -45,7 +45,8 @@ const themes = [
   { id: 'bw-dark',  label: 'Чёрно-белая (тёмная)',  bg: '#0A0A0A', accent: '#FFFFFF' },
   { id: 'bw-light', label: 'Чёрно-белая (светлая)', bg: '#F8F8F8', accent: '#111111' },
   { id: 'mountain', label: 'Горная',                 bg: '#0E0C0A', accent: '#C8A882' },
-  { id: 'oceanic',  label: 'Океаническая',           bg: '#060C14', accent: '#4DC8C8' },
+  { id: 'oceanic',          label: 'Океаническая',           bg: '#060C14', accent: '#4DC8C8' },
+  { id: 'premium-lavender', label: 'Premium Lavender ✨',    bg: '#F8F7FF', accent: '#7C6FFF' },
 ]
 
 function confirmReset() {
