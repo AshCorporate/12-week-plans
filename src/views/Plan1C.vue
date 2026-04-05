@@ -1,1371 +1,964 @@
 <template>
-  <div class="plan1c">
-    <!-- Hero Section -->
-    <div class="hero-section">
-      <h1 class="page-title hero-title">🏗️ 6-недельный план: 1С-разработчик</h1>
-      <p class="hero-subtitle">Цель — первый оффер как можно быстрее</p>
-      <div class="stats-row">
-        <div class="stat-card card">
-          <div class="stat-value">42</div>
-          <div class="stat-label">дня</div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-value">14</div>
-          <div class="stat-label">помидоров/день</div>
-        </div>
-        <div class="stat-card card">
-          <div class="stat-value">3</div>
-          <div class="stat-label">проекта</div>
-        </div>
+  <div class="plan1c-page">
+    <h1 class="page-title">56-дневный план: 1С-разработчик</h1>
+    <p class="plan-subtitle">8 недель · 3 проекта · путь от нуля до junior</p>
+
+    <div class="weeks-list">
+      <div v-for="(week, wi) in weeks" :key="wi" class="week-section">
+        <button class="week-toggle" @click="toggleWeek(wi)">
+          <span class="week-num">Неделя {{ wi + 1 }}</span>
+          <span class="week-theme">{{ week.theme }}</span>
+          <span class="week-chevron" :class="{ open: openWeeks[wi] }">▾</span>
+        </button>
+
+        <Transition name="expand">
+          <div v-if="openWeeks[wi]" class="week-days">
+            <div v-for="(day, di) in week.days" :key="di" class="day-card card">
+              <div class="day-header">
+                <div class="day-meta">
+                  <span class="day-num-badge" :class="{ checkpoint: day.checkpoint }">
+                    День {{ day.num }}
+                  </span>
+                  <span v-if="day.checkpoint" class="cp-tag">КП</span>
+                  <span v-if="plan1cStore.isReportFilled(day.num)" class="done-tag">✓</span>
+                </div>
+                <h3 class="day-goal">{{ day.goal }}</h3>
+              </div>
+
+              <ul class="day-tasks">
+                <li
+                  v-for="(task, ti) in day.tasks"
+                  :key="ti"
+                  class="day-task"
+                  :class="{ done: plan1cStore.isSubtaskDone(day.num, ti) }"
+                  @click="plan1cStore.toggleSubtask(day.num, ti)"
+                >
+                  <span class="task-check">{{ plan1cStore.isSubtaskDone(day.num, ti) ? '☑' : '☐' }}</span>
+                  {{ task }}
+                </li>
+              </ul>
+
+              <div class="day-result">
+                <span class="result-label">Результат:</span> {{ day.result }}
+              </div>
+
+              <div v-if="day.checkpoint" class="checkpoint-box">
+                <span class="cp-icon">◈</span>
+                <span class="cp-text">{{ day.checkpointText }}</span>
+              </div>
+            </div>
+          </div>
+        </Transition>
       </div>
     </div>
-
-    <!-- Daily Structure -->
-    <section class="section">
-      <h2 class="section-title">🍅 Ежедневная структура (14 помидоров)</h2>
-      <div class="pomodoro-grid">
-        <div
-          v-for="p in pomodoroItems"
-          :key="p.num"
-          class="pomo-card"
-          :class="'pomo-' + p.type"
-        >
-          <div class="pomo-num">P{{ p.num }}</div>
-          <div class="pomo-name">{{ p.name }}</div>
-          <div class="pomo-desc">{{ p.desc }}</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Base Rules -->
-    <section class="section">
-      <h2 class="section-title">📌 Базовые правила</h2>
-      <div class="card rules-card">
-        <ol class="rules-list">
-          <li v-for="(rule, i) in baseRules" :key="i" class="rule-item">
-            <span class="rule-icon">{{ rule.icon }}</span>
-            <span class="rule-text">{{ rule.text }}</span>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- 6 Weeks Goals -->
-    <section class="section">
-      <h2 class="section-title">📅 6 недель — цели</h2>
-      <div class="weeks-grid">
-        <div
-          v-for="week in weeks"
-          :key="week.num"
-          class="week-card card"
-          :class="'week-color-' + week.num"
-        >
-          <div class="week-header" @click="toggleWeek(week.num)">
-            <div class="week-header-left">
-              <span class="week-icon">{{ week.icon }}</span>
-              <div>
-                <div class="week-title">Неделя {{ week.num }}: {{ week.goal }}</div>
-                <div class="week-result">✅ {{ week.result }}</div>
-              </div>
-            </div>
-            <span class="week-toggle">{{ openWeeks.includes(week.num) ? '▲' : '▼' }}</span>
-          </div>
-          <div v-if="openWeeks.includes(week.num)" class="week-body">
-            <ul class="week-topics">
-              <li v-for="(topic, ti) in week.topics" :key="ti">{{ topic }}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Portfolio Projects -->
-    <section class="section">
-      <h2 class="section-title">💼 3 проекта для портфолио</h2>
-      <div class="projects-grid">
-        <div v-for="proj in projects" :key="proj.num" class="project-card card">
-          <div class="project-header">
-            <span class="project-icon">{{ proj.icon }}</span>
-            <div>
-              <div class="project-title">Проект {{ proj.num }}: {{ proj.name }}</div>
-            </div>
-          </div>
-          <ul class="project-features">
-            <li v-for="(feat, fi) in proj.features" :key="fi">{{ feat }}</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Must-have Interview -->
-    <section class="section">
-      <h2 class="section-title">🎯 Must-have для собеседования</h2>
-      <div class="interview-grid">
-        <div v-for="(topic, i) in interviewTopics" :key="i" class="interview-badge">
-          <span class="interview-num">{{ i + 1 }}</span>
-          <span class="interview-text">{{ topic }}</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Resources -->
-    <section class="section">
-      <h2 class="section-title">📚 Ресурсы</h2>
-      <div class="card">
-        <ul class="resources-list">
-          <li v-for="res in resources" :key="res.title" class="resource-item">
-            <span class="resource-icon">{{ res.icon }}</span>
-            <div class="resource-info">
-              <a :href="res.url" target="_blank" rel="noopener noreferrer" class="resource-link">{{ res.title }}</a>
-              <span class="resource-source">{{ res.source }}</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- My Legend -->
-    <section class="section">
-      <h2 class="section-title">🗣️ Моя легенда</h2>
-      <div class="card legend-card">
-        <div class="legend-quote">
-          «У меня сильная классическая разработческая база: C++, C#, Python, алгоритмы, БД, математика.
-          Я целенаправленно вошел в 1С, за последние недели собрал 3 прикладных проекта на платформе:
-          склад/продажи, CRM light и учёт денежных потоков. Реализовал документы, справочники, регистры накопления,
-          запросы, СКД, формы, роли и бизнес-логику проведения. Ищу стартовую позицию junior 1С разработчика
-          с быстрым ростом.»
-        </div>
-      </div>
-    </section>
-
-    <!-- Interactive Weekly Goals -->
-    <section class="section">
-      <h2 class="section-title">✅ Еженедельные цели (интерактивно)</h2>
-      <div class="accordion-list">
-        <div
-          v-for="wNum in 6"
-          :key="wNum"
-          class="accordion-item card"
-          :class="{ 'week-active': wNum === currentWeek1c }"
-        >
-          <div class="accordion-header" @click="toggleWeeklyGoals(wNum)">
-            <div class="interactive-week-header-left">
-              <span class="interactive-week-badge" :class="wNum === currentWeek1c ? 'badge-current' : ''">Неделя {{ wNum }}</span>
-              <span class="interactive-week-progress-text">
-                {{ plan1cStore.getWeeklyTasks(wNum).filter(t => t.done).length }} /
-                {{ plan1cStore.getWeeklyTasks(wNum).length }}
-              </span>
-            </div>
-            <div class="interactive-week-bar-wrap">
-              <div
-                class="progress-bar-wrap"
-                style="flex: 1"
-              >
-                <div
-                  class="progress-bar-fill"
-                  :style="{
-                    width: plan1cStore.getWeeklyTasks(wNum).length > 0
-                      ? (plan1cStore.getWeeklyTasks(wNum).filter(t => t.done).length / plan1cStore.getWeeklyTasks(wNum).length * 100) + '%'
-                      : '0%'
-                  }"
-                ></div>
-              </div>
-            </div>
-            <span class="accordion-toggle">{{ openWeeklyGoals.includes(wNum) ? '▲' : '▼' }}</span>
-          </div>
-          <div v-if="openWeeklyGoals.includes(wNum)" class="accordion-body">
-            <div class="weekly-task-list">
-              <label
-                v-for="task in plan1cStore.getWeeklyTasks(wNum)"
-                :key="task.id"
-                class="interactive-task-row"
-              >
-                <input
-                  type="checkbox"
-                  :checked="task.done"
-                  @change="plan1cStore.toggleWeeklyTask(wNum, task.id)"
-                />
-                <span :class="{ 'done-text': task.done }">{{ task.text }}</span>
-                <button
-                  class="btn btn-ghost btn-icon-xs"
-                  @click.prevent="plan1cStore.deleteWeeklyTask(wNum, task.id)"
-                  title="Удалить"
-                >🗑️</button>
-              </label>
-            </div>
-            <div class="add-task-row" style="margin-top: 0.75rem">
-              <input
-                v-model="newWeeklyTaskText[wNum]"
-                class="input"
-                placeholder="Добавить цель..."
-                @keydown.enter="addWeeklyTask(wNum)"
-              />
-              <button class="btn btn-primary btn-sm" @click="addWeeklyTask(wNum)">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Interactive Daily Tasks -->
-    <section class="section">
-      <h2 class="section-title">📅 Задачи на сегодня (интерактивно)</h2>
-      <div class="card daily-panel">
-        <div class="daily-panel-header">
-          <div>
-            <div class="daily-date-label">{{ todayLabel }}</div>
-            <div class="daily-day-label">День {{ todayDayNum }} недели {{ currentWeek1c }}</div>
-          </div>
-          <div class="daily-progress-info">
-            <span class="daily-progress-text">
-              {{ plan1cStore.getDailyTasks(todayKey).filter(t => t.done).length }} /
-              {{ plan1cStore.getDailyTasks(todayKey).length }}
-            </span>
-            <div class="progress-bar-wrap" style="width: 120px">
-              <div
-                class="progress-bar-fill"
-                :style="{
-                  width: plan1cStore.getDailyTasks(todayKey).length > 0
-                    ? (plan1cStore.getDailyTasks(todayKey).filter(t => t.done).length / plan1cStore.getDailyTasks(todayKey).length * 100) + '%'
-                    : '0%'
-                }"
-              ></div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="plan1cStore.getDailyTasks(todayKey).length === 0" class="empty-state-inline">
-          Нет задач на сегодня
-        </div>
-
-        <div class="weekly-task-list" style="margin-top: 0.75rem">
-          <label
-            v-for="task in plan1cStore.getDailyTasks(todayKey)"
-            :key="task.id"
-            class="interactive-task-row"
-          >
-            <input
-              type="checkbox"
-              :checked="task.done"
-              @change="plan1cStore.toggleDailyTask(todayKey, task.id)"
-            />
-            <span :class="{ 'done-text': task.done }">{{ task.text }}</span>
-            <button
-              class="btn btn-ghost btn-icon-xs"
-              @click.prevent="plan1cStore.deleteDailyTask(todayKey, task.id)"
-              title="Удалить"
-            >🗑️</button>
-          </label>
-        </div>
-
-        <div class="add-task-row" style="margin-top: 0.75rem">
-          <input
-            v-model="newDailyTaskText"
-            class="input"
-            placeholder="Добавить задачу на сегодня..."
-            @keydown.enter="addDailyTask"
-          />
-          <button class="btn btn-primary btn-sm" @click="addDailyTask">+</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Detailed Weekly Plan Accordion -->
-    <section class="section">
-      <h2 class="section-title">📋 Детальный план по неделям</h2>
-      <div class="accordion-list">
-        <div
-          v-for="week in detailedWeeks"
-          :key="week.num"
-          class="accordion-item card"
-        >
-          <div class="accordion-header" @click="toggleDetail(week.num)">
-            <span>Неделя {{ week.num }}: {{ week.title }}</span>
-            <span class="accordion-toggle">{{ openDetails.includes(week.num) ? '▲' : '▼' }}</span>
-          </div>
-          <div v-if="openDetails.includes(week.num)" class="accordion-body">
-            <div v-for="day in week.days" :key="day.day" class="detail-day">
-              <div class="detail-day-title">День {{ day.day }}: {{ day.title }}</div>
-              <ul class="detail-tasks">
-                <li v-for="(task, ti) in day.tasks" :key="ti">{{ task }}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useSettingsStore } from '../stores/settings.js'
+import { ref } from 'vue'
 import { usePlan1cTasksStore } from '../stores/plan1cTasks.js'
 
-const settings = useSettingsStore()
 const plan1cStore = usePlan1cTasksStore()
 
-const openWeeks = ref([])
-const openDetails = ref([])
-const openWeeklyGoals = ref([])
-const newWeeklyTaskText = ref({})
-const newDailyTaskText = ref('')
+const openWeeks = ref(Array(8).fill(false).map((_, i) => i === 0))
 
-const currentWeek1c = computed(() => {
-  const now = Date.now()
-  const start = new Date(settings.startDate).getTime()
-  const diff = now - start
-  const week = Math.floor(diff / (7 * 24 * 3600 * 1000)) + 1
-  return Math.max(1, Math.min(week, 6))
-})
-
-const todayKey = computed(() => new Date().toISOString().split('T')[0])
-
-const todayLabel = computed(() =>
-  new Date().toLocaleDateString('ru-RU', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
-)
-
-const todayDayNum = computed(() => {
-  const start = new Date(settings.startDate)
-  const today = new Date(todayKey.value)
-  const diffMs = today.getTime() - start.getTime()
-  const diffDays = Math.floor(diffMs / (24 * 3600 * 1000))
-  return (diffDays % 7) + 1
-})
-
-function toggleWeek(num) {
-  const idx = openWeeks.value.indexOf(num)
-  if (idx === -1) openWeeks.value.push(num)
-  else openWeeks.value.splice(idx, 1)
+function toggleWeek(index) {
+  openWeeks.value[index] = !openWeeks.value[index]
 }
-
-function toggleDetail(num) {
-  const idx = openDetails.value.indexOf(num)
-  if (idx === -1) openDetails.value.push(num)
-  else openDetails.value.splice(idx, 1)
-}
-
-function toggleWeeklyGoals(num) {
-  const idx = openWeeklyGoals.value.indexOf(num)
-  if (idx === -1) openWeeklyGoals.value.push(num)
-  else openWeeklyGoals.value.splice(idx, 1)
-}
-
-function addWeeklyTask(weekNum) {
-  const text = (newWeeklyTaskText.value[weekNum] || '').trim()
-  if (text) {
-    plan1cStore.addWeeklyTask(weekNum, text)
-    newWeeklyTaskText.value[weekNum] = ''
-  }
-}
-
-function addDailyTask() {
-  const text = newDailyTaskText.value.trim()
-  if (text) {
-    plan1cStore.addDailyTask(todayKey.value, text, currentWeek1c.value, todayDayNum.value)
-    newDailyTaskText.value = ''
-  }
-}
-
-const pomodoroItems = [
-  { num: 1, name: 'Теория — новая тема', desc: 'Изучение + демонстрация', type: 'theory' },
-  { num: 2, name: 'Теория — повтор', desc: 'Повтор вчерашнего материала', type: 'theory' },
-  { num: 3, name: 'Теория — примеры', desc: 'Разбор и анализ примеров', type: 'theory' },
-  { num: 4, name: 'Теория — конспект', desc: 'Структурированный конспект', type: 'theory' },
-  { num: 5, name: 'Практика 1С', desc: 'Работа в конфигураторе 1С', type: 'practice' },
-  { num: 6, name: 'Практика 1С', desc: 'Работа в конфигураторе 1С', type: 'practice' },
-  { num: 7, name: 'Практика 1С', desc: 'Работа в конфигураторе 1С', type: 'practice' },
-  { num: 8, name: 'Практика 1С', desc: 'Работа в конфигураторе 1С', type: 'practice' },
-  { num: 9, name: 'Портфолио', desc: 'README, скрины, описание функционала', type: 'portfolio' },
-  { num: 10, name: 'Портфолио', desc: 'Оформление и публикация', type: 'portfolio' },
-  { num: 11, name: 'Карьера', desc: 'Отклики, резюме, вакансии', type: 'career' },
-  { num: 12, name: 'Карьера', desc: 'Анализ рынка и отклики', type: 'career' },
-  { num: 13, name: 'Сертификация', desc: 'Тесты и задачи на сертификат', type: 'cert' },
-  { num: 14, name: 'Дневник', desc: 'Ретроспектива + план на завтра', type: 'diary' },
-]
-
-const baseRules = [
-  { icon: '🖥️', text: 'Каждый день работаешь в 1С руками' },
-  { icon: '💼', text: 'Каждый день пополняешь портфолио' },
-  { icon: '📨', text: 'С конца 2-й недели — ежедневные отклики' },
-  { icon: '🎤', text: 'С 3-й недели — ежедневная отработка ответов на собеседование' },
-  { icon: '📝', text: 'С 4-й недели — решение задач под сертификацию (минимум 1 помидор в день)' },
-  { icon: '✍️', text: 'Всё изученное оформляешь в заметки «что умею показать работодателю»' },
-]
 
 const weeks = [
   {
-    num: 1,
-    icon: '🚀',
-    goal: 'Вход в платформу и базовые объекты',
-    result: 'Мини-база (Контрагенты + Номенклатура + Поступление + Установка цен), резюме v1',
-    topics: [
-      'Установка и настройка 1С:Предприятие 8.3',
-      'Конфигуратор: структура конфигурации',
-      'Справочник Контрагенты — создание, реквизиты, формы',
-      'Справочник Номенклатура — группы, артикул, ед.изм',
-      'Документ Поступление товаров — шапка, ТЧ, проведение',
-      'Регистр сведений: установка цен',
-      'Первичное резюме — Google Docs / hh.ru',
-    ],
-  },
-  {
-    num: 2,
-    icon: '📦',
-    goal: 'Регистры накопления, движения, запросы, СКД',
-    result: 'Проект «Склад/Продажи» v1.0',
-    topics: [
-      'Регистр накопления ТоварыНаСкладах',
-      'Движения документов, проведение',
-      'Язык запросов 1С — выборки, условия, итоги',
-      'Схема компоновки данных — отчёт по остаткам',
-      'Документ Реализация товаров',
-      'Роли: менеджер / кладовщик / администратор',
-      'Портфолио: README + скрины + GitHub',
-    ],
-  },
-  {
-    num: 3,
-    icon: '🛠️',
-    goal: 'Управляемые формы, клиент-сервер, права, CRM light',
-    result: 'Проект «Заказы/CRM»',
-    topics: [
-      'Управляемые формы — клиентский/серверный контекст',
-      'Директивы &НаКлиенте, &НаСервере, &НаКлиентеНаСервере',
-      'Справочник Клиенты, документ ЗаказКлиента',
-      'Бизнес-статусы и переходы между ними',
-      'Отчёт по воронке / статусам / просроченным',
-      'Проверки заполнения формы',
-      'Ежедневные отклики на вакансии',
-    ],
-  },
-  {
-    num: 4,
-    icon: '⚡',
-    goal: 'Уровень «берём на junior»: отладка, производительность, проект 3',
-    result: '3 проекта + 30 ответов на вопросы собеседования',
-    topics: [
-      'Отладчик 1С — точки останова, просмотр переменных',
-      'Профилировщик запросов, план запроса',
-      'Проект 3: Финансовый учёт (ДДС, cashflow)',
-      'Регистр накопления ДенежныеСредства',
-      'Отчёт план-факт по периоду',
-      '30 вопросов/ответов для собеседования',
-      'Оформление всех 3 проектов в портфолио',
-    ],
-  },
-  {
-    num: 5,
-    icon: '📤',
-    goal: 'Режим «получить оффер»',
-    result: '40–50 откликов, 3 оформленных проекта, 50 вопросов/ответов',
-    topics: [
-      'Массовые отклики: 8–10 в день',
-      'Подготовка к техническим собеседованиям',
-      'Финальное оформление 3 проектов',
-      '50 вопросов/ответов на собеседование',
-      'Подготовка к задачам на сертификат 1С:Специалист',
-    ],
-  },
-  {
-    num: 6,
-    icon: '🏆',
-    goal: 'Финальный штурм: собесы + сертификат',
-    result: 'Офферы/финальные собесы + готовность к первому сертификату',
-    topics: [
-      'Технические собеседования — практика, фидбэк',
-      'Решение задач уровня 1С:Специалист',
-      'Повторение всех ключевых тем',
-      'Переговоры и выбор оффера',
-      'Подготовка к экзамену на сертификат',
-    ],
-  },
-]
-
-const projects = [
-  {
-    num: 1,
-    icon: '🏭',
-    name: 'Склад и продажи',
-    features: [
-      'Справочники: Номенклатура, Контрагенты, Склады',
-      'Документы: Поступление, Реализация',
-      'Регистр накопления: ТоварыНаСкладах',
-      'Проведение документов, отчёт по остаткам',
-      'Печатная форма (ТОРГ-12)',
-      'Роли: менеджер / кладовщик / администратор',
-    ],
-  },
-  {
-    num: 2,
-    icon: '🤝',
-    name: 'Заказы и задачи / CRM light',
-    features: [
-      'Справочник Клиенты, документ ЗаказКлиента',
-      'Бизнес-статусы, формы списков/объекта',
-      'Проверки заполнения',
-      'Отчёт по воронке / статусам / просроченным',
-      'Напоминания и обработки',
-    ],
-  },
-  {
-    num: 3,
-    icon: '💰',
-    name: 'Финансовый mini-control',
-    features: [
-      'Статьи ДДС, ПоступлениеДС / СписаниеДС',
-      'Регистр накопления ДенежныеСредства',
-      'Отчёт cashflow',
-      'План-факт по периоду',
-      'Аналитика по статьям',
-    ],
-  },
-]
-
-const interviewTopics = [
-  'Платформа и конфигурация',
-  'Объекты метаданных',
-  'Справочник / документ / перечисление / константа',
-  'Табличная часть',
-  'Проведение документа',
-  'Регистр сведений vs регистр накопления',
-  'Остатки и обороты',
-  'Измерения / ресурсы / реквизиты',
-  'Запросы 1С',
-  'СКД',
-  'Формы и модули',
-  'Клиент/сервер',
-  'Права и роли',
-  'Отладка',
-  'Типовые ошибки новичка',
-  'Как реализовать складской учёт',
-  'Как проверять отрицательные остатки',
-  'Как сделать отчёт по продажам',
-  'Что уже делал руками',
-  'Почему именно 1С',
-]
-
-const resources = [
-  { icon: '📗', title: 'Учебная версия 1С:Предприятие 8.3', url: 'https://v8.1c.ru/edu/editionforstu/', source: 'v8.1c.ru' },
-  { icon: '📘', title: 'Практическое пособие разработчика Радченко/Хрусталевой', url: 'https://v8.1c.ru/metod/books/book.jsp?id=522', source: 'v8.1c.ru' },
-  { icon: '📙', title: '101 совет начинающим разработчикам', url: 'https://v8.1c.ru/metod/books/book.jsp?id=552', source: 'v8.1c.ru' },
-  { icon: '📕', title: 'Сборник задач для подготовки к «1С:Специалист»', url: 'https://v8.1c.ru/metod/books/book.jsp?id=555', source: 'v8.1c.ru' },
-  { icon: '📓', title: 'Версия книги с 1C:EDT', url: 'https://v8.1c.ru/metod/books/book.jsp?id=617', source: 'v8.1c.ru' },
-  { icon: '🌐', title: 'Официальная документация 1C:Enterprise', url: 'https://1c-dn.com/1c_enterprise/documentation/', source: '1c-dn.com' },
-]
-
-const detailedWeeks = [
-  {
-    num: 1,
-    title: 'Вход в платформу и базовые объекты',
+    theme: 'Вход в платформу и базовые объекты',
     days: [
       {
-        day: 1,
-        title: 'Установка и первый запуск',
+        num: 1, goal: 'Создать учебную конфигурацию, освоить интерфейс конфигуратора',
         tasks: [
-          'P1–P4: Установка 1С 8.3, создание учебной ИБ, интерфейс конфигуратора',
-          'P5–P8: Создание первого справочника «Контрагенты» с реквизитами',
-          'P9–P10: Скрин справочника в README на GitHub',
-          'P11–P12: Зарегистрироваться на hh.ru, изучить 5 вакансий junior 1С',
-          'P13: Пройти тест по интерфейсу конфигуратора (v8.1c.ru)',
-          'P14: Записать что сделал, план на завтра',
+          'Создать новую пустую конфигурацию',
+          'Изучить интерфейс конфигуратора: дерево объектов, редактор, запуск',
+          'Создать подсистемы: Склад, Продажи, Справочники',
+          'Разобраться с основными типами объектов (справочники, документы, регистры)',
         ],
+        result: 'Чистая учебная конфигурация с подсистемами',
+        checkpoint: false,
       },
       {
-        day: 2,
-        title: 'Справочник Номенклатура',
+        num: 2, goal: 'Создать справочники Товары и Клиенты',
         tasks: [
-          'P1–P4: Теория — иерархические справочники, группы, подчинённые',
-          'P5–P8: Создать справочник Номенклатура: артикул, ед.изм., группы',
-          'P9–P10: Обновить README, добавить скрины формы справочника',
-          'P11–P12: Составить базовое резюме v1 в Google Docs',
-          'P13: Тест по объектам метаданных',
-          'P14: Ретроспектива дня',
+          'Создать справочник Товары с реквизитами: Наименование, Цена, Единица измерения',
+          'Создать справочник Клиенты с реквизитами: Наименование, Телефон, Адрес',
+          'Настроить формы списка и элемента для обоих справочников',
+          'Ввести тестовые данные: 5 товаров, 3 клиента',
         ],
+        result: '2 рабочих справочника с заполненными формами',
+        checkpoint: false,
       },
       {
-        day: 3,
-        title: 'Документ Поступление товаров',
+        num: 3, goal: 'Создать документ ПоступлениеТоваров',
         tasks: [
-          'P1–P4: Теория — документы, реквизиты шапки, табличные части',
-          'P5–P8: Создать документ Поступление: шапка (контрагент, дата), ТЧ (номенклатура, кол-во, цена)',
-          'P9–P10: README: описать структуру документа',
-          'P11–P12: Опубликовать резюме на hh.ru',
-          'P13: Тест «документы и ТЧ»',
-          'P14: Дневник',
+          'Создать документ ПоступлениеТоваров с шапкой (Дата, Поставщик)',
+          'Добавить табличную часть Товары (Товар, Количество, Цена, Сумма)',
+          'Настроить форму документа',
+          'Проверить: документ открывается, заполняется, сохраняется без проведения',
         ],
+        result: 'Документ открывается, заполняется и сохраняется',
+        checkpoint: false,
       },
       {
-        day: 4,
-        title: 'Регистр сведений: Цены',
+        num: 4, goal: 'Создать документ РеализацияТоваров',
         tasks: [
-          'P1–P4: Теория — регистры сведений, отличие от накопления',
-          'P5–P8: Создать регистр сведений ЦеныНоменклатуры, привязать к документу УстановкаЦен',
-          'P9–P10: Портфолио: добавить регистр в описание проекта',
-          'P11–P12: Изучить ещё 5 вакансий, выписать требования',
-          'P13: Задача на регистр сведений',
-          'P14: Ретроспектива',
+          'Создать документ РеализацияТоваров с шапкой (Дата, Клиент)',
+          'Добавить табличную часть аналогично ПоступлениеТоваров',
+          'Настроить форму документа',
+          'Сравнить логику с Днём 3, найти различия и сходства',
         ],
+        result: '2 документа на уровне ввода данных',
+        checkpoint: false,
       },
       {
-        day: 5,
-        title: 'Проведение и формы',
+        num: 5, goal: 'Встроенный язык 1С: основы',
         tasks: [
-          'P1–P4: Теория — процедура ОбработкаПроведения, управляемые формы',
-          'P5–P8: Написать проведение для Поступления, настроить форму документа',
-          'P9–P10: Обновить README, добавить схему проекта',
-          'P11–P12: Отправить первые 2 отклика на hh.ru',
-          'P13: Практика: написать простой запрос к регистру',
-          'P14: Дневник дня',
+          'Переменные, условия, циклы',
+          'Процедуры и функции',
+          'Коллекции: массив, структура, соответствие',
+          'Обход табличной части в цикле',
         ],
+        result: 'Синтаксис языка больше не пугает',
+        checkpoint: false,
       },
       {
-        day: 6,
-        title: 'Отчёт по остаткам (СКД)',
+        num: 6, goal: 'Живая логика в документе',
         tasks: [
-          'P1–P4: Теория — схема компоновки данных, источники данных',
-          'P5–P8: Создать отчёт ОстаткиТоваров на базе СКД',
-          'P9–P10: Финализировать проект 1 в портфолио (скрины отчёта)',
-          'P11–P12: Обновить резюме, добавить проект 1',
-          'P13: Тест по СКД',
-          'P14: Ретроспектива недели (кратко)',
+          'Написать проверки при записи документа',
+          'Обработка нажатия кнопки',
+          'Обход строк табличной части и подсчёт итога документа',
+          'Запретить запись при незаполненных обязательных полях',
         ],
+        result: 'Документ содержит живую логику',
+        checkpoint: false,
       },
       {
-        day: 7,
-        title: 'Итоги недели 1',
+        num: 7, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Создание объектов самостоятельно',
         tasks: [
-          'P1–P4: Повторить все темы недели 1: справочники, документы, регистры, формы, проведение, СКД',
-          'P5–P8: Зафиксировать и дополнить проект 1, написать модульный тест логики',
-          'P9–P10: Оформить итоговый README проекта 1 (v1.0)',
-          'P11–P12: Изучить рынок вакансий, составить список компаний',
-          'P13: Решить 3 задачи на запросы',
-          'P14: Полная ретроспектива недели, план на неделю 2',
+          'В пустой конфигурации воссоздать 1 справочник с нуля',
+          'Воссоздать 1 документ с нуля без подсказок',
+          'Зафиксировать пробелы и непонятые моменты',
+          'Написать краткий отчёт о пройденной неделе',
         ],
+        result: 'Можешь создать справочник и документ независимо',
+        checkpoint: true,
+        checkpointText: 'Можешь ли ты самостоятельно создать справочник и документ без подсказок?',
       },
     ],
   },
   {
-    num: 2,
-    title: 'Регистры накопления, движения, запросы, СКД',
+    theme: 'Формы, модули, события, структура кода',
     days: [
-      { day: 1, title: 'Регистр накопления', tasks: ['Теория: виды регистров, измерения/ресурсы', 'Создать ТоварыНаСкладах', 'Отклик x2, портфолио'] },
-      { day: 2, title: 'Движения документов', tasks: ['Теория: набор записей, проведение', 'Реализовать движения для Поступления', 'Портфолио update'] },
-      { day: 3, title: 'Документ Реализация', tasks: ['Создать документ Реализация с движениями расхода', 'Проверить остатки через запрос', 'Отклики x2'] },
-      { day: 4, title: 'Запросы: выборки, условия, итоги', tasks: ['Практика запросов: ВЫБРАТЬ, ГДЕ, ИТОГИ', 'Запрос остатков по складу', 'Тест по запросам'] },
-      { day: 5, title: 'Запросы: соединения, вложенные', tasks: ['ЛЕВОЕ СОЕДИНЕНИЕ, вложенные запросы', 'Запрос продаж по контрагентам', 'Отклики x3'] },
-      { day: 6, title: 'СКД: отчёт по продажам', tasks: ['Отчёт ПродажиПоКонтрагентам на СКД', 'Группировки, отборы, оформление', 'Обновить README проекта'] },
-      { day: 7, title: 'Итоги недели 2', tasks: ['Финализировать проект «Склад/Продажи» v1.0', 'Роли: менеджер/кладовщик/админ', 'Ретроспектива + план на неделю 3', 'Отклики x3'] },
+      {
+        num: 8, goal: 'Модули объектов и форм',
+        tasks: [
+          'Изучить: модуль объекта, модуль формы, общий модуль',
+          'Понять: где размещается бизнес-логика, где UI-логика',
+          'Написать процедуру в каждом из трёх типов модулей',
+          'Запустить и убедиться, что всё работает',
+        ],
+        result: 'Понимаешь, где размещать код',
+        checkpoint: false,
+      },
+      {
+        num: 9, goal: 'События форм и автозаполнение',
+        tasks: [
+          'Событие открытия формы: инициализация данных',
+          'Событие изменения реквизита: автозаполнение полей',
+          'Обработчик кнопки на форме',
+          'Автоматическое заполнение цены при выборе товара',
+        ],
+        result: 'Формы получили управляемое поведение',
+        checkpoint: false,
+      },
+      {
+        num: 10, goal: 'Табличная часть: расчёты и валидация',
+        tasks: [
+          'Автоматический пересчёт суммы строки при изменении количества/цены',
+          'Валидация строки: запрет нулевого количества',
+          'Обход и удаление строк табличной части',
+          'Итоговая сумма документа в отдельном реквизите',
+        ],
+        result: 'Табличные части работают как прикладная система',
+        checkpoint: false,
+      },
+      {
+        num: 11, goal: 'Общие модули: избавляемся от дублирования',
+        tasks: [
+          'Вынести валидацию документа в общий модуль',
+          'Написать 2-3 универсальных процедуры',
+          'Убрать дублирующийся код из форм',
+          'Проверить: всё работает через общий модуль',
+        ],
+        result: 'Код становится чище',
+        checkpoint: false,
+      },
+      {
+        num: 12, goal: 'Пользовательские сообщения и ошибки',
+        tasks: [
+          'Сообщения пользователю: Сообщить(), Предупреждение()',
+          'Запрет записи при невалидных данных',
+          'Ясные тексты ошибок на русском языке',
+          'Протестировать все сценарии ошибок',
+        ],
+        result: 'Пользователь понимает, что пошло не так',
+        checkpoint: false,
+      },
+      {
+        num: 13, goal: 'Мини-рефакторинг',
+        tasks: [
+          'Упростить имена переменных и процедур',
+          'Удалить неиспользуемый код',
+          'Добавить комментарии к сложным местам',
+          'Привести код к единому стилю',
+        ],
+        result: 'Проект 1 выглядит аккуратнее',
+        checkpoint: false,
+      },
+      {
+        num: 14, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Ревизия конфигурации',
+        tasks: [
+          'Проверить все объекты конфигурации',
+          'Ввести тестовые документы',
+          'Намеренно сломать сценарии и убедиться в валидации',
+          'Составить список найденных багов и исправить',
+        ],
+        result: 'Учебная конфигурация с продуманной структурой объектов и базовой логикой',
+        checkpoint: true,
+        checkpointText: 'Конфигурация с продуманной структурой объектов и базовой логикой.',
+      },
     ],
   },
   {
-    num: 3,
-    title: 'Управляемые формы, клиент-сервер, CRM light',
+    theme: 'Регистры и проведение — сердце 1С',
     days: [
-      { day: 1, title: 'Управляемые формы', tasks: ['Теория клиент-серверного взаимодействия', 'Директивы &НаКлиенте/&НаСервере', 'Отклики x3'] },
-      { day: 2, title: 'Справочник Клиенты', tasks: ['Создать Клиенты с реквизитами', 'Кастомная форма списка', 'Портфолио update'] },
-      { day: 3, title: 'Документ ЗаказКлиента', tasks: ['Создать заказ, ТЧ, статусы', 'Бизнес-логика смены статусов', 'Отклики x3'] },
-      { day: 4, title: 'Проверки заполнения', tasks: ['ПроверкаЗаполнения, программные проверки', 'Подсветка незаполненных полей', 'Первая отработка вопросов собеседования'] },
-      { day: 5, title: 'Отчёт по воронке', tasks: ['СКД: воронка статусов, просроченные', 'Отбор по менеджеру, периоду', 'Отклики x3'] },
-      { day: 6, title: 'Напоминания/Обработки', tasks: ['Регламентные задания или обработки', 'Отправка напоминания по заказам', 'Портфолио проекта 2'] },
-      { day: 7, title: 'Итоги недели 3', tasks: ['Финализировать проект «Заказы/CRM»', 'Ретроспектива + план на неделю 4', 'Отклики x5', '10 вопросов собеседования'] },
+      {
+        num: 15, goal: 'Регистры накопления: теория',
+        tasks: [
+          'Что такое регистр накопления: измерения, ресурсы, реквизиты',
+          'Остатки vs обороты: разница и применение',
+          'Нарисовать схему: документ → движения → регистр',
+          'Изучить примеры из типовых конфигураций',
+        ],
+        result: 'Понимаешь, как хранятся движения',
+        checkpoint: false,
+      },
+      {
+        num: 16, goal: 'Создать регистр ТоварыНаСкладах',
+        tasks: [
+          'Создать регистр накопления ТоварыНаСкладах',
+          'Измерения: Товар, Склад',
+          'Ресурс: Количество',
+          'Проверить структуру в конфигураторе',
+        ],
+        result: 'Регистр создан корректно',
+        checkpoint: false,
+      },
+      {
+        num: 17, goal: 'Проведение ПоступлениеТоваров',
+        tasks: [
+          'Настроить проведение документа ПоступлениеТоваров',
+          'Сформировать приходные движения по регистру',
+          'Проверить: данные записываются в регистр после проведения',
+          'Отменить проведение и убедиться, что движения удаляются',
+        ],
+        result: 'Поступления создают остатки на складе',
+        checkpoint: false,
+      },
+      {
+        num: 18, goal: 'Проведение РеализацияТоваров',
+        tasks: [
+          'Настроить проведение документа РеализацияТоваров',
+          'Сформировать расходные движения по регистру',
+          'Проверить: продажи уменьшают остатки',
+          'Тестовый сценарий: поступление → реализация → остаток',
+        ],
+        result: 'Продажи уменьшают остатки на складе',
+        checkpoint: false,
+      },
+      {
+        num: 19, goal: 'Контроль остатков при продаже',
+        tasks: [
+          'Перед проведением реализации проверить наличие товара на складе',
+          'Запретить проведение если количество превышает остаток',
+          'Показать понятное сообщение об ошибке',
+          'Протестировать граничные случаи',
+        ],
+        result: 'Нельзя продать то, чего нет на складе',
+        checkpoint: false,
+      },
+      {
+        num: 20, goal: 'Тестирование сценариев',
+        tasks: [
+          'Несколько поступлений разных товаров',
+          'Несколько реализаций, включая граничные случаи',
+          'Частичная реализация и проверка остатков',
+          'Исправить найденные ошибки в логике',
+        ],
+        result: 'Движения ведут себя предсказуемо',
+        checkpoint: false,
+      },
+      {
+        num: 21, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Объяснить схему работы',
+        tasks: [
+          'Объяснить вслух: документ → проводка → движения → регистр → остатки',
+          'Написать объяснение от руки (конспект)',
+          'Нарисовать схему без подглядывания',
+          'Зафиксировать оставшиеся вопросы',
+        ],
+        result: 'Можешь объяснить, как документ влияет на учёт',
+        checkpoint: true,
+        checkpointText: 'Можешь ли объяснить: документ → проводка → движения → регистр → остатки?',
+      },
     ],
   },
   {
-    num: 4,
-    title: 'Уровень junior: отладка, производительность, проект 3',
+    theme: 'Запросы и отчёты — твоя сильная зона',
     days: [
-      { day: 1, title: 'Отладчик 1С', tasks: ['Точки останова, стек вызовов, просмотр переменных', 'Найти и исправить баг в старом проекте', 'Отклики x3'] },
-      { day: 2, title: 'Профилировщик запросов', tasks: ['Анализ плана запроса', 'Оптимизировать медленный запрос', 'Начать проект 3 (финансы)'] },
-      { day: 3, title: 'Проект 3: структура', tasks: ['Статьи ДДС, регистр ДенежныеСредства', 'ПоступлениеДС / СписаниеДС', 'Отклики x3'] },
-      { day: 4, title: 'Отчёт cashflow', tasks: ['СКД cashflow по статьям и периодам', 'План-факт сравнение', 'Тест и задачи к сертификату'] },
-      { day: 5, title: 'Аналитика', tasks: ['Детализация аналитики финансов', 'Доработка форм и отчётов', 'Отклики x5'] },
-      { day: 6, title: 'Завершение проекта 3', tasks: ['Финализация финансового проекта', 'README и скрины', '15 вопросов собеседования'] },
-      { day: 7, title: 'Итоги недели 4', tasks: ['3 проекта + 30 вопросов/ответов', 'Ретроспектива', 'Отклики x5', 'Тест сертификации'] },
+      {
+        num: 22, goal: 'Язык запросов 1С: основы',
+        tasks: [
+          'Структура запроса: ВЫБРАТЬ, ИЗ, ГДЕ, УПОРЯДОЧИТЬ ПО',
+          'Написать 3 простых запроса к справочникам',
+          'Группировка: СГРУППИРОВАТЬ ПО, ИТОГИ',
+          'Псевдонимы и соединения таблиц',
+        ],
+        result: 'Понимаешь базовый синтаксис запросов',
+        checkpoint: false,
+      },
+      {
+        num: 23, goal: 'Запросы к документам с фильтрацией',
+        tasks: [
+          'Запрос к документу с фильтром по периоду',
+          'Фильтр по клиенту и по товару',
+          'Получить список документов за месяц',
+          'Написать 3 разных запроса без паники',
+        ],
+        result: 'Пишешь базовые запросы без страха',
+        checkpoint: false,
+      },
+      {
+        num: 24, goal: 'Запросы к регистрам: остатки и обороты',
+        tasks: [
+          'Запрос к виртуальной таблице Остатки',
+          'Запрос к виртуальной таблице Обороты',
+          'Получить остатки на заданную дату',
+          'Получить обороты за период',
+        ],
+        result: 'Получаешь остатки на любую дату',
+        checkpoint: false,
+      },
+      {
+        num: 25, goal: 'Отчёт «Остатки товаров»',
+        tasks: [
+          'Создать внешний отчёт или отчёт в конфигурации',
+          'Написать запрос к регистру остатков',
+          'Вывести результат в табличный документ',
+          'Протестировать на реальных документах',
+        ],
+        result: 'Первый полезный отчёт готов',
+        checkpoint: false,
+      },
+      {
+        num: 26, goal: 'Отчёт «Продажи за период»',
+        tasks: [
+          'Запрос с фильтром по датам',
+          'Группировка по клиентам или товарам',
+          'Итоговые суммы в отчёте',
+          'Проверить цифры на соответствие введённым документам',
+        ],
+        result: 'Второй отчёт готов',
+        checkpoint: false,
+      },
+      {
+        num: 27, goal: 'Аналитический отчёт',
+        tasks: [
+          'Топ товаров по объёму продаж',
+          'Или топ клиентов по сумме закупок',
+          'Группировка, сортировка, итоги',
+          'Отчёт показывает аналитику, а не просто учёт',
+        ],
+        result: 'Делаешь аналитику, а не только учёт',
+        checkpoint: false,
+      },
+      {
+        num: 28, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Запросы как инструмент',
+        tasks: [
+          'Переписать 2 отчёта с чистого листа',
+          'Прокомментировать сложные части запросов',
+          'Написать мини-шпаргалку по запросам',
+          'Объяснить вслух синтаксис запроса к регистру остатков',
+        ],
+        result: 'Запросы стали поддержкой, а не слабым местом',
+        checkpoint: true,
+        checkpointText: 'Запросы — теперь твоя поддержка, а не слабое место.',
+      },
     ],
   },
   {
-    num: 5,
-    title: 'Режим «получить оффер»',
+    theme: 'Печатные формы, стандартные подходы, финализация Проекта 1',
     days: [
-      { day: 1, title: 'Интенсивные отклики', tasks: ['8–10 откликов в день', 'Подготовка кейсов для собеседований', 'Задачи сертификации'] },
-      { day: 2, title: 'Техническое собеседование', tasks: ['Практика live coding 1С', 'Разбор ошибок и доработка', 'Отклики x8'] },
-      { day: 3, title: 'Финальные доработки портфолио', tasks: ['Чистый код, документация', 'Скрины и видео-демо', 'Отклики x8'] },
-      { day: 4, title: 'Вопросы собеседования', tasks: ['40 вопросов/ответов', 'Практика объяснения проектов', 'Отклики x8'] },
-      { day: 5, title: 'Анализ фидбэка', tasks: ['Доработки по фидбэку рекрутеров', 'Задачи к сертификату', 'Отклики x8'] },
-      { day: 6, title: 'Прокачка слабых мест', tasks: ['Повторить сложные темы', '50 вопросов/ответов', 'Отклики x8'] },
-      { day: 7, title: 'Итоги недели 5', tasks: ['40–50 откликов суммарно за неделю', 'Ретроспектива', 'Подготовка к финальным собесам'] },
+      {
+        num: 29, goal: 'Печатные формы',
+        tasks: [
+          'Табличный документ: структура и вывод',
+          'Вывод шапки, строк табличной части, итогов',
+          'Создать простую печатную форму для реализации',
+          'Подключить кнопку «Печать» к документу',
+        ],
+        result: 'Документ можно распечатать нормально',
+        checkpoint: false,
+      },
+      {
+        num: 30, goal: 'Улучшение Проекта 1',
+        tasks: [
+          'Привести в порядок формы: правильные заголовки и метки',
+          'Добавить недостающие валидации',
+          'Сделать сообщения об ошибках понятными',
+          'Убедиться, что проект выглядит цельно, а не как учебный мусор',
+        ],
+        result: 'Проект выглядит цельно',
+        checkpoint: false,
+      },
+      {
+        num: 31, goal: 'Основы типовых конфигураций',
+        tasks: [
+          'Бухгалтерия предприятия: ключевые объекты',
+          'Управление торговлей: структура',
+          'Зарплата и управление персоналом: обзор',
+          'Чем типовая конфигурация отличается от учебной',
+        ],
+        result: 'Начинаешь думать ближе к рынку',
+        checkpoint: false,
+      },
+      {
+        num: 32, goal: 'Расширения конфигурации',
+        tasks: [
+          'Зачем нужны расширения и когда не надо дорабатывать типовую напрямую',
+          'Создать простое расширение',
+          'Добавить реквизит через расширение',
+          'Понять ограничения и преимущества',
+        ],
+        result: 'Знаешь, что такое расширение и зачем оно нужно',
+        checkpoint: false,
+      },
+      {
+        num: 33, goal: 'Финализация Проекта 1',
+        tasks: [
+          'Полный сценарий: товар → поступление → реализация → контроль остатков → отчёт → печать',
+          'Исправить все найденные баги',
+          'Убедиться, что всё работает без ошибок',
+          'Сохранить конфигурацию в файл для портфолио',
+        ],
+        result: 'Проект 1 завершён',
+        checkpoint: false,
+      },
+      {
+        num: 34, goal: 'Оформить Проект 1 как портфолио',
+        tasks: [
+          'Написать описание: что реализовано, какие объекты использованы',
+          'Какие задачи решены, какие трудности преодолены',
+          'Подготовить краткий рассказ на 2-3 минуты',
+          'Сохранить описание в текстовом файле',
+        ],
+        result: 'Первое описание проекта для резюме/собеседования готово',
+        checkpoint: false,
+      },
+      {
+        num: 35, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Объяснить проект вслух',
+        tasks: [
+          'Объяснить вслух все ключевые концепции как на собеседовании',
+          'Пройтись по Проекту 1 и рассказать, что сделано',
+          'Зафиксировать слабые места и темы для повторения',
+          'Составить список вопросов, которые пока вызывают затруднения',
+        ],
+        result: 'Проект 1 завершён и объясним',
+        checkpoint: true,
+        checkpointText: 'Проект 1 завершён и ты можешь его объяснить.',
+      },
     ],
   },
   {
-    num: 6,
-    title: 'Финальный штурм: собесы + сертификат',
+    theme: 'Интеграции и загрузка данных',
     days: [
-      { day: 1, title: 'Финальные собесы', tasks: ['Технические собеседования', 'Анализ результатов', 'Отклики x5'] },
-      { day: 2, title: 'Задачи на сертификат', tasks: ['Решение задач уровня 1С:Специалист', 'Повторение запросов и СКД', 'Собесы'] },
-      { day: 3, title: 'Переговоры и офферы', tasks: ['Переговоры по условиям', 'Принятие решения', 'Задачи сертификации'] },
-      { day: 4, title: 'Итоговое повторение', tasks: ['Повтор всех 20 тем собеседования', 'Финальная подготовка к экзамену', 'Офферы / доп. собесы'] },
-      { day: 5, title: 'Экзамен 1С:Специалист', tasks: ['Подготовка к сдаче сертификата', 'Финальные правки в портфолио'] },
-      { day: 6, title: 'Итоги и следующий шаг', tasks: ['Принятие оффера или продолжение поиска', 'Итоговая ретроспектива 6 недель'] },
-      { day: 7, title: 'Финал', tasks: ['Документирование опыта', 'Plan B и следующие цели', 'Отдых'] },
+      {
+        num: 36, goal: 'Работа с файлами в 1С',
+        tasks: [
+          'Чтение файла: ТекстовыйДокумент, ЧтениеТекста',
+          'Общая схема загрузки данных из файла в 1С',
+          'Как организовать обработку загрузки',
+          'Продумать структуру Проекта 2',
+        ],
+        result: 'Понимаешь, как строится импорт',
+        checkpoint: false,
+      },
+      {
+        num: 37, goal: 'Загрузка из CSV',
+        tasks: [
+          'Прочитать CSV-файл построчно',
+          'Разобрать строки по разделителю',
+          'Валидация данных перед загрузкой',
+          'Тестовый CSV с 10 строками заказов',
+        ],
+        result: 'Базовый загрузчик табличных данных',
+        checkpoint: false,
+      },
+      {
+        num: 38, goal: 'Работа с JSON в 1С',
+        tasks: [
+          'Прочитать JSON-файл: ПрочитатьJSON()',
+          'Разобрать структуру объекта',
+          'Подготовить объекты для создания в базе',
+          'Тестовый JSON с данными заказов',
+        ],
+        result: 'Умеешь читать JSON в 1С',
+        checkpoint: false,
+      },
+      {
+        num: 39, goal: 'Начать Проект 2: загрузчик заказов',
+        tasks: [
+          'Создать обработку ЗагрузкаЗаказов',
+          'Форма: выбор файла, кнопка загрузки, таблица результатов',
+          'Подготовить тестовый файл с данными',
+          'Продумать маппинг полей файла → реквизиты документа',
+        ],
+        result: 'Скелет загрузчика готов',
+        checkpoint: false,
+      },
+      {
+        num: 40, goal: 'Создание данных из файла',
+        tasks: [
+          'Если клиент не найден — создать нового',
+          'Если товар не найден — создать или записать ошибку',
+          'Автоматически создать документ заказа',
+          'Проверить: файл реально создаёт данные в базе',
+        ],
+        result: 'Файл реально создаёт данные в базе',
+        checkpoint: false,
+      },
+      {
+        num: 41, goal: 'Журнал ошибок загрузки',
+        tasks: [
+          'Собирать ошибки загрузки в список',
+          'Отобразить отчёт: успешно/с ошибкой',
+          'Разделить удачные и неудачные строки',
+          'Обработка выглядит ближе к production',
+        ],
+        result: 'Обработка выглядит ближе к production',
+        checkpoint: false,
+      },
+      {
+        num: 42, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Проект 2 завершён',
+        tasks: [
+          'Несколько тестовых файлов с разными данными',
+          'Граничные случаи: пустые строки, неверные типы',
+          'Исправить все найденные баги',
+          'Написать описание Проекта 2 для портфолио',
+        ],
+        result: 'Проект 2 завершён',
+        checkpoint: true,
+        checkpointText: 'Проект 2 завершён.',
+      },
+    ],
+  },
+  {
+    theme: 'Отладка, качество, клиент-сервер, резюме',
+    days: [
+      {
+        num: 43, goal: 'Отладка в 1С',
+        tasks: [
+          'Точки останова: как ставить и использовать',
+          'Просмотр значений переменных в отладчике',
+          'Пройти 2-3 своих бага только через отладчик',
+          'Понять: отладчик — главный инструмент разработчика',
+        ],
+        result: 'Находишь проблемы системно, а не угадыванием',
+        checkpoint: false,
+      },
+      {
+        num: 44, goal: 'Клиент и сервер в управляемом приложении',
+        tasks: [
+          'Где выполняется код: клиент vs сервер',
+          'Что нельзя делать бездумно в форме',
+          'Директивы компиляции: &НаКлиенте, &НаСервере',
+          'Рефакторинг одной процедуры с правильным разделением',
+        ],
+        result: 'Понимаешь архитектуру управляемого приложения',
+        checkpoint: false,
+      },
+      {
+        num: 45, goal: 'Обработка исключений и устойчивость кода',
+        tasks: [
+          'Попытка / Исключение: когда и как применять',
+          'Защита от некорректных данных',
+          'Логирование проблем',
+          'Применить обработку исключений в загрузчике Проекта 2',
+        ],
+        result: 'Код становится более устойчивым',
+        checkpoint: false,
+      },
+      {
+        num: 46, goal: 'Начать Проект 3: система заявок',
+        tasks: [
+          'Создать справочник Исполнители',
+          'Создать документ Заявка: тема, статус, исполнитель, дата, комментарий',
+          'Настроить форму документа',
+          'Продумать бизнес-логику статусов',
+        ],
+        result: 'Скелет Проекта 3 готов',
+        checkpoint: false,
+      },
+      {
+        num: 47, goal: 'Логика статусов в заявках',
+        tasks: [
+          'Статусы: Черновик → На согласовании → Согласовано / Отклонено',
+          'Проверки перехода между статусами',
+          'Ограничения по ролям (или имитация)',
+          'Нельзя перейти в статус, минуя предыдущий',
+        ],
+        result: 'Проект 3 получил бизнес-логику',
+        checkpoint: false,
+      },
+      {
+        num: 48, goal: 'Отчёт и список заявок',
+        tasks: [
+          'Отчёт по статусам заявок',
+          'Фильтр по исполнителю и периоду',
+          'Удобный список заявок с группировкой',
+          'Проект 3 можно показать',
+        ],
+        result: 'Проект 3 можно показать',
+        checkpoint: false,
+      },
+      {
+        num: 49, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Составить резюме',
+        tasks: [
+          'Написать раздел «Технический стек»: C++, Python, SQL как основа',
+          'Описать 3 проекта на 1С кратко',
+          'Написать раздел «О себе» для 1С-позиции',
+          'Отдать резюме на проверку (или прочитать вслух как претендент)',
+        ],
+        result: 'Есть резюме и 3 проекта',
+        checkpoint: true,
+        checkpointText: 'Есть готовое резюме и 3 проекта.',
+      },
+    ],
+  },
+  {
+    theme: 'Выход на рынок и закрытие пробелов',
+    days: [
+      {
+        num: 50, goal: 'Упаковать портфолио',
+        tasks: [
+          'Для каждого проекта: задача, реализация, использованные объекты платформы',
+          'Какие сложности преодолены',
+          'Подготовить устную презентацию каждого проекта (2-3 мин.)',
+          'Протестировать рассказ вслух',
+        ],
+        result: 'Можешь уверенно рассказать о своей работе',
+        checkpoint: false,
+      },
+      {
+        num: 51, goal: 'Вопросы собеседования: основы',
+        tasks: [
+          'Что такое справочник, документ, табличная часть',
+          'Что такое проводка, регистр накопления, измерения и ресурсы',
+          'Чем отличаются остатки от оборотов',
+          'Ответить на 10 базовых вопросов без подглядывания',
+        ],
+        result: 'Не теряешься на базовых вопросах',
+        checkpoint: false,
+      },
+      {
+        num: 52, goal: 'Вопросы собеседования: код и запросы',
+        tasks: [
+          'Где пишется код: модуль объекта vs модуль формы vs общий модуль',
+          'Как проверить остаток перед продажей (объяснить код)',
+          'Как написать запрос к регистру остатков',
+          'Как загрузить данные из файла',
+        ],
+        result: 'Можешь объяснить свой код',
+        checkpoint: false,
+      },
+      {
+        num: 53, goal: 'Выход на рынок труда',
+        tasks: [
+          'Найти вакансии: junior 1С, стажёр 1С, начинающий 1С-программист',
+          'Составить список из 5-10 компаний',
+          'Отправить первые заявки',
+          'Записать контакты и дедлайны ответов',
+        ],
+        result: 'Поиск работы начат',
+        checkpoint: false,
+      },
+      {
+        num: 54, goal: 'Тестовые задания',
+        tasks: [
+          'Взять 1-2 стандартных тестовых сценария',
+          'Выполнить под давлением времени',
+          'Выявить, где замедляешься больше всего',
+          'Начать работать в «режиме работодателя»',
+        ],
+        result: 'Начинаешь работать в режиме работодателя',
+        checkpoint: false,
+      },
+      {
+        num: 55, goal: 'Устранить главную слабость',
+        tasks: [
+          'Выбрать одну шаткую тему: регистры, запросы или формы',
+          'Потратить весь день на глубокое погружение в эту тему',
+          'Написать конспект или мини-шпаргалку',
+          'Закрыть главный пробел, не распыляясь',
+        ],
+        result: 'Закрываешь главный пробел',
+        checkpoint: false,
+      },
+      {
+        num: 56, goal: 'КОНТРОЛЬНАЯ ТОЧКА: Финальная сборка',
+        tasks: [
+          'Просмотреть все 3 проекта и проверить, что они запускаются',
+          'Проверить актуальность резюме',
+          'Составить финальный список: что умею / что объясню / куда подаю / что улучшить дальше',
+          'Написать план на месяц после марафона',
+        ],
+        result: 'Готов к подаче заявок на позицию junior',
+        checkpoint: true,
+        checkpointText: 'Готов к подаче заявок на junior-позицию.',
+      },
     ],
   },
 ]
 </script>
 
 <style scoped>
-.plan1c {
-  max-width: 960px;
+.plan1c-page {
+  max-width: 860px;
+  margin: 0 auto;
   padding-bottom: 3rem;
 }
 
-/* Hero */
-.hero-section {
-  margin-bottom: 2.5rem;
-}
-
-.hero-title {
-  margin-bottom: 0.5rem;
-}
-
-.hero-subtitle {
+.plan-subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.3rem;
+  margin-bottom: 2rem;
 }
 
-.stats-row {
+.weeks-list {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
-  flex-wrap: wrap;
 }
 
-.stat-card {
-  flex: 1;
-  min-width: 120px;
-  text-align: center;
-  padding: 1.25rem 1rem;
-}
-
-.stat-value {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: var(--accent);
-  line-height: 1.1;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
-}
-
-/* Sections */
-.section {
-  margin-bottom: 2.5rem;
-}
-
-.section-title {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
-}
-
-/* Pomodoro Grid */
-.pomodoro-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 0.75rem;
-}
-
-.pomo-card {
-  background: var(--bg-card);
+.week-section {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.75rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.pomo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px var(--accent-glow);
-}
-
-.pomo-num {
-  font-size: 0.75rem;
-  font-weight: 700;
-  margin-bottom: 0.3rem;
-  opacity: 0.8;
-}
-
-.pomo-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 0.2rem;
-  line-height: 1.2;
-}
-
-.pomo-desc {
-  font-size: 0.72rem;
-  color: var(--text-secondary);
-  line-height: 1.3;
-}
-
-.pomo-theory { border-top: 3px solid var(--accent); }
-.pomo-theory .pomo-num { color: var(--accent); }
-
-.pomo-practice { border-top: 3px solid var(--success); }
-.pomo-practice .pomo-num { color: var(--success); }
-
-.pomo-portfolio { border-top: 3px solid #60A8FF; }
-.pomo-portfolio .pomo-num { color: #60A8FF; }
-
-.pomo-career { border-top: 3px solid #FFB020; }
-.pomo-career .pomo-num { color: #FFB020; }
-
-.pomo-cert { border-top: 3px solid var(--danger); }
-.pomo-cert .pomo-num { color: var(--danger); }
-
-.pomo-diary { border-top: 3px solid var(--text-secondary); }
-.pomo-diary .pomo-num { color: var(--text-secondary); }
-
-/* Rules */
-.rules-card {
-  padding: 1.5rem;
-}
-
-.rules-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  counter-reset: rules-counter;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.rule-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: rgba(124, 111, 255, 0.06);
-  border-radius: 8px;
-  border-left: 3px solid var(--accent);
-  transition: background 0.2s;
-}
-
-.rule-item:hover {
-  background: rgba(124, 111, 255, 0.12);
-}
-
-.rule-icon {
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-.rule-text {
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-/* Weeks Grid */
-.weeks-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.week-card {
-  padding: 0;
+  border-radius: 14px;
   overflow: hidden;
-  border-left: 4px solid var(--accent);
-  transition: box-shadow 0.2s;
-}
-
-.week-color-1 { border-left-color: #7C6FFF; }
-.week-color-2 { border-left-color: #50C878; }
-.week-color-3 { border-left-color: #60A8FF; }
-.week-color-4 { border-left-color: #FFB020; }
-.week-color-5 { border-left-color: #F06060; }
-.week-color-6 { border-left-color: #C878FF; }
-
-.week-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-
-.week-header:hover {
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.week-header-left {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-}
-
-.week-icon {
-  font-size: 1.4rem;
-  flex-shrink: 0;
-  line-height: 1;
-  margin-top: 0.1rem;
-}
-
-.week-title {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.95rem;
-  line-height: 1.3;
-}
-
-.week-result {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-top: 0.25rem;
 }
 
 .week-toggle {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  flex-shrink: 0;
-}
-
-.week-body {
-  padding: 0 1.25rem 1rem 1.25rem;
-  border-top: 1px solid var(--border);
-  animation: slideDown 0.2s ease;
-}
-
-.week-topics {
-  padding: 0.75rem 0 0 1rem;
-  margin: 0;
+  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.week-topics li {
-  color: var(--text-secondary);
-  font-size: 0.88rem;
-  line-height: 1.4;
-}
-
-/* Projects Grid */
-.projects-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  align-items: center;
   gap: 1rem;
-}
-
-.project-card {
-  padding: 1.25rem;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.project-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px var(--accent-glow);
-}
-
-.project-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.project-icon {
-  font-size: 1.8rem;
-  line-height: 1;
-}
-
-.project-title {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 1rem;
-  line-height: 1.3;
-}
-
-.project-features {
-  padding: 0 0 0 1rem;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.project-features li {
-  color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
-/* Interview Grid */
-.interview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0.6rem;
-}
-
-.interview-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.6rem 0.85rem;
-  transition: border-color 0.2s, background 0.2s;
-}
-
-.interview-badge:hover {
-  border-color: var(--accent);
-  background: rgba(124, 111, 255, 0.08);
-}
-
-.interview-num {
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--accent);
-  min-width: 1.2rem;
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.interview-text {
-  font-size: 0.85rem;
-  color: var(--text-primary);
-  line-height: 1.3;
-}
-
-/* Resources */
-.resources-list {
-  list-style: none;
-  padding: 1rem;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.resource-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0.5rem;
-  border-radius: 6px;
-  transition: background 0.2s;
-}
-
-.resource-item:hover {
-  background: rgba(124, 111, 255, 0.06);
-}
-
-.resource-icon {
-  font-size: 1.2rem;
-  flex-shrink: 0;
-}
-
-.resource-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.resource-link {
-  color: var(--accent);
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-
-.resource-link:hover {
-  color: var(--accent-hover);
-  text-decoration: underline;
-}
-
-.resource-source {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-}
-
-/* Legend */
-.legend-card {
-  padding: 1.75rem 2rem;
-  border-left: 4px solid var(--accent);
-  background: linear-gradient(135deg, rgba(124, 111, 255, 0.08) 0%, var(--bg-card) 100%);
-}
-
-.legend-quote {
-  font-size: 1rem;
-  line-height: 1.7;
-  color: var(--text-primary);
-  font-style: italic;
-  quotes: "«" "»";
-}
-
-/* Accordion */
-.accordion-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.accordion-item {
-  padding: 0;
-  overflow: hidden;
-}
-
-.accordion-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   padding: 1rem 1.25rem;
+  background: var(--bg-card);
+  border: none;
   cursor: pointer;
-  user-select: none;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 0.95rem;
+  font-family: inherit;
+  text-align: left;
   transition: background 0.2s;
 }
 
-.accordion-header:hover {
-  background: rgba(255, 255, 255, 0.04);
+.week-toggle:hover {
+  background: var(--bg-elevated);
 }
 
-.accordion-toggle {
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-}
-
-.accordion-body {
-  padding: 0.75rem 1.25rem 1.25rem;
-  border-top: 1px solid var(--border);
-  animation: slideDown 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.detail-day {
-  background: rgba(255, 255, 255, 0.025);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
-  border-left: 2px solid var(--border);
-}
-
-.detail-day-title {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--accent);
-  margin-bottom: 0.5rem;
-}
-
-.detail-tasks {
-  padding: 0 0 0 1rem;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.detail-tasks li {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-/* Animations */
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  .stats-row {
-    gap: 0.75rem;
-  }
-
-  .stat-card {
-    min-width: 80px;
-  }
-
-  .stat-value {
-    font-size: 1.6rem;
-  }
-
-  .pomodoro-grid {
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 0.5rem;
-  }
-
-  .projects-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .interview-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  }
-
-  .legend-card {
-    padding: 1.25rem;
-  }
-}
-/* Interactive sections */
-.interactive-week-header-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 0 0 auto;
-}
-
-.interactive-week-badge {
+.week-num {
   font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.badge-current {
+  font-weight: 700;
   color: var(--accent);
-}
-
-.interactive-week-progress-text {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.interactive-week-bar-wrap {
+.week-theme {
   flex: 1;
-  min-width: 60px;
-  margin: 0 0.75rem;
-  display: flex;
-  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
-.week-active > .accordion-header {
-  border-left: 3px solid var(--accent);
-  padding-left: calc(1.25rem - 3px);
+.week-chevron {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  transition: transform 0.25s;
 }
 
-.weekly-task-list {
+.week-chevron.open {
+  transform: rotate(180deg);
+}
+
+.week-days {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.interactive-task-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 0.25rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.interactive-task-row:hover {
+  gap: 0.75rem;
+  padding: 0.75rem;
   background: var(--bg-secondary);
 }
 
-.interactive-task-row input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: var(--accent);
-  cursor: pointer;
-  flex-shrink: 0;
+.day-card {
+  border-radius: 12px;
 }
 
-.interactive-task-row span {
-  flex: 1;
-  font-size: 0.9rem;
+.day-header {
+  margin-bottom: 0.75rem;
+}
+
+.day-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.day-num-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 2px 8px;
+  text-transform: uppercase;
+}
+
+.day-num-badge.checkpoint {
+  background: var(--accent);
+  color: var(--bg-primary);
+}
+
+.cp-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border-radius: 4px;
+  padding: 1px 5px;
+  letter-spacing: 0.06em;
+}
+
+.done-tag {
+  font-size: 0.8rem;
+  color: var(--success);
+  font-weight: 600;
+}
+
+.day-goal {
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
 }
 
-.btn-icon-xs {
-  padding: 0.15rem 0.4rem;
-  font-size: 0.85rem;
-  opacity: 0;
-  transition: opacity 0.15s;
+.day-tasks {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
 }
 
-.interactive-task-row:hover .btn-icon-xs {
-  opacity: 1;
-}
-
-.daily-panel {
-  padding: 1.25rem;
-}
-
-.daily-panel-header {
+.day-task {
   display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s;
+  padding: 0.15rem 0;
+  line-height: 1.5;
 }
 
-.daily-date-label {
-  font-size: 0.95rem;
-  font-weight: 600;
+.day-task:hover {
   color: var(--text-primary);
-  text-transform: capitalize;
 }
 
-.daily-day-label {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin-top: 0.2rem;
-}
-
-.daily-progress-info {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.daily-progress-text {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.empty-state-inline {
-  color: var(--text-secondary);
-  font-size: 0.9rem;
-  padding: 0.75rem 0;
-}
-
-.done-text {
+.day-task.done {
   text-decoration: line-through;
   opacity: 0.5;
 }
 
-.btn-sm {
-  padding: 0.3rem 0.75rem;
-  font-size: 0.85rem;
+.task-check {
+  flex-shrink: 0;
+  font-size: 1rem;
+  color: var(--accent);
+  line-height: 1.4;
 }
 
+.day-result {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  background: var(--accent-subtle);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.result-label {
+  font-weight: 600;
+  color: var(--accent);
+  margin-right: 0.25rem;
+}
+
+.checkpoint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+}
+
+.cp-icon {
+  font-size: 1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.cp-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Expand transition */
+.expand-enter-active,
+.expand-leave-active {
+  transition: opacity 0.25s, max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  max-height: 9999px;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  max-height: 0;
+}
+
+@media (max-width: 768px) {
+  .week-theme {
+    font-size: 0.85rem;
+  }
+}
 </style>

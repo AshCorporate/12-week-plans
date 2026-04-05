@@ -2,38 +2,40 @@
   <div class="dashboard">
     <!-- Hero -->
     <header class="dashboard-hero">
-      <div class="hero-content">
-        <AppLogo class="hero-logo" />
-        <h1 class="hero-greeting">{{ greeting }}</h1>
+      <div class="hero-brand">
+        <h1 class="brand-title">
+          <span class="brand-ilya">Ilya</span>
+          <span class="brand-heart">♥</span>
+          <span class="brand-varya">Varya</span>
+          <span class="brand-eq"> = </span>
+          <span class="brand-family">Family</span>
+        </h1>
         <p class="hero-date">{{ currentDate }}</p>
       </div>
     </header>
 
     <!-- Cards grid -->
     <div class="dashboard-grid">
-      <!-- Cycle progress -->
+      <!-- Marathon progress -->
       <div class="card progress-card">
-        <p class="card-eyebrow">Цикл 12 недель</p>
-        <h3 class="card-title">Прогресс</h3>
-
+        <p class="card-eyebrow">56-дневный марафон</p>
+        <h3 class="card-title">День {{ marathon.currentDay }} из 56</h3>
         <div class="progress-section">
           <div class="progress-label">
-            <span class="progress-name">Неделя {{ currentWeek }} из 12</span>
-            <span class="progress-pct">{{ Math.round(weekProgress) }}%</span>
+            <span class="progress-name">Прогресс</span>
+            <span class="progress-pct">{{ Math.round(marathon.progressPct) }}%</span>
           </div>
           <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" :style="{ width: weekProgress + '%' }"></div>
+            <div class="progress-bar-fill" :style="{ width: marathon.progressPct + '%' }"></div>
           </div>
         </div>
-
-        <div class="progress-section" style="margin-top: 1.25rem">
-          <div class="progress-label">
-            <span class="progress-name">Блок {{ currentBlock }} из 3</span>
-            <span class="progress-pct">{{ Math.round(blockProgress) }}%</span>
-          </div>
-          <div class="progress-bar-wrap">
-            <div class="progress-bar-fill" :style="{ width: blockProgress + '%' }"></div>
-          </div>
+        <div class="days-remaining">
+          <span class="remaining-num">{{ marathon.daysRemaining }}</span>
+          <span class="remaining-label"> дней осталось</span>
+        </div>
+        <div v-if="!todayReportFilled" class="report-reminder">
+          <span class="reminder-text">Не забудь заполнить отчёт за сегодня</span>
+          <RouterLink to="/marathon" class="btn btn-ghost reminder-btn">Заполнить →</RouterLink>
         </div>
       </div>
 
@@ -41,7 +43,6 @@
       <div class="card tasks-card">
         <p class="card-eyebrow">Сегодня</p>
         <h3 class="card-title">Задачи</h3>
-
         <div class="stats-row">
           <div class="stat-item">
             <span class="stat-value" style="color: var(--success)">{{ doneTodayCount }}</span>
@@ -64,7 +65,6 @@
             <span class="ring-label">{{ Math.round(todayTaskProgress) }}%</span>
           </div>
         </div>
-
         <div class="progress-bar-wrap" style="margin-top: 1.25rem">
           <div class="progress-bar-fill" :style="{ width: todayTaskProgress + '%' }"></div>
         </div>
@@ -82,228 +82,230 @@
 
 <script setup>
 import { computed } from 'vue'
-import AppLogo from '../components/AppLogo.vue'
 import { useSettingsStore } from '../stores/settings.js'
 import { useTasksStore } from '../stores/tasks.js'
+import { useMarathonStore } from '../stores/marathon.js'
 
 const settings = useSettingsStore()
 const tasksStore = useTasksStore()
+const marathon = useMarathonStore()
 
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  if (h < 5) return 'Доброй ночи 🌙'
-  if (h < 12) return 'Доброе утро ☀️'
-  if (h < 17) return 'Добрый день 👋'
-  return 'Добрый вечер 🌆'
-})
-
-const currentDate = computed(() =>
-  new Date().toLocaleDateString('ru-RU', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+const currentDate = computed(() => {
+  return new Date().toLocaleDateString('ru-RU', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   })
-)
-
-const startDate = computed(() => new Date(settings.startDate))
-
-const currentWeek = computed(() => {
-  const now = Date.now()
-  const start = startDate.value.getTime()
-  const diff = now - start
-  const week = Math.floor(diff / (7 * 24 * 3600 * 1000)) + 1
-  return Math.max(1, Math.min(week, 12))
 })
 
-const weekProgress = computed(() => (currentWeek.value / 12) * 100)
+const todayReportFilled = computed(() => marathon.isReportFilled(marathon.currentDay))
 
-const currentBlock = computed(() => Math.min(Math.ceil(currentWeek.value / 4), 3))
-const blockProgress = computed(() => (currentBlock.value / 3) * 100)
-
-const todayTasks = computed(() => tasksStore.getTodayTasks())
+// Tasks
+const todayStr = computed(() => new Date().toISOString().split('T')[0])
+const todayTasks = computed(() => tasksStore.tasksByDate[todayStr.value] || [])
 const todayCount = computed(() => todayTasks.value.length)
 const doneTodayCount = computed(() => todayTasks.value.filter(t => t.done).length)
-const todayTaskProgress = computed(() =>
-  todayCount.value > 0 ? (doneTodayCount.value / todayCount.value) * 100 : 0
-)
+const todayTaskProgress = computed(() => todayCount.value > 0 ? (doneTodayCount.value / todayCount.value) * 100 : 0)
 
-const RING_R = 18
-const RING_CIRC = 2 * Math.PI * RING_R
-const ringOffset = computed(() =>
-  RING_CIRC - (todayTaskProgress.value / 100) * RING_CIRC
-)
+const ringCircumference = 2 * Math.PI * 18
+const ringOffset = computed(() => ringCircumference - (todayTaskProgress.value / 100) * ringCircumference)
 
+// Quotes
 const quotes = [
-  { text: 'Делай что должен, и будь что будет.', author: 'Лев Толстой' },
-  { text: 'Начни — это половина дела.', author: 'Гораций' },
-  { text: 'Человек рождён для действия.', author: 'Вольтер' },
-  { text: 'Не откладывай на завтра то, что можно сделать сегодня.', author: 'Бенджамин Франклин' },
-  { text: 'Время — деньги.', author: 'Бенджамин Франклин' },
-  { text: 'Жизнь — это то, что происходит, пока ты строишь планы.', author: 'Джон Леннон' },
-  { text: 'Единственный способ делать великую работу — любить то, что делаешь.', author: 'Стив Джобс' },
-  { text: 'Не важно, насколько медленно ты движешься, главное — не останавливаться.', author: 'Конфуций' },
-  { text: 'Успех — это способность идти от одной неудачи к другой, не теряя оптимизма.', author: 'Уинстон Черчилль' },
-  { text: 'Жизнь можно понять только оглядываясь назад, но прожить — только смотря вперёд.', author: 'Сёрен Кьеркегор' },
-  { text: 'Если хочешь изменить мир — начни с себя.', author: 'Махатма Ганди' },
-  { text: 'Цель без плана — просто желание.', author: 'Антуан де Сент-Экзюпери' },
-  { text: 'Сделай сегодня то, что другие не хотят, завтра ты будешь жить так, как другие не могут.', author: 'Джерри Райс' },
-  { text: 'В середине каждой трудности скрывается возможность.', author: 'Альберт Эйнштейн' },
-  { text: 'Планирование без действий — мечта, действие без планирования — кошмар.', author: 'Японская поговорка' },
-  { text: 'Лучшее время посадить дерево было 20 лет назад. Второе лучшее время — сейчас.', author: 'Китайская пословица' },
-  { text: 'Жизнь не в том, чтобы жить, а в том, чтобы чувствовать себя живым.', author: 'Уильям Хэзлитт' },
-  { text: 'Время, которое вы хорошо провели, — не потраченное зря время.', author: 'Бертран Рассел' },
-  { text: 'Великие дела совершаются не силой, а настойчивостью.', author: 'Сэмюэл Джонсон' },
-  { text: 'Не считай дни — сделай так, чтобы дни считались.', author: 'Мухаммед Али' },
-  { text: 'Не ищи в жизни лёгких путей — ищи смысл.', author: 'Ральф Эмерсон' },
-  { text: 'Потеря времени — самая тяжёлая из всех потерь.', author: 'Феофраст' },
+  { text: 'Дисциплина равна свободе.', author: 'Jocko Willink' },
+  { text: 'Потеря времени — величайшее из расточительств.', author: 'Марк Аврелий' },
+  { text: 'Пока ты жив — пока есть такая возможность — пока можешь — совершенствуй себя.', author: 'Марк Аврелий' },
+  { text: 'Лучшее время посадить дерево было 20 лет назад. Следующее лучшее время — сейчас.', author: 'Китайская пословица' },
+  { text: 'Единственный путь делать великую работу — любить то, что делаешь.', author: 'Стив Джобс' },
+  { text: 'Тот, кто двигается вперёд — обгоняет тех, кто стоит на месте.', author: 'Мусаси Миямото' },
+  { text: 'Не жди вдохновения. Начни делать — и вдохновение само придёт к тебе.', author: 'Джек Лондон' },
+  { text: 'Всё, что стоит делать, стоит делать хорошо.', author: 'Честерфилд' },
+  { text: 'Человек может всё, что он воображает.', author: 'Виктор Гюго' },
+  { text: 'Трудности делают человека.', author: 'Сенека' },
+  { text: 'Страдание — это очищение.', author: 'Фёдор Достоевский' },
+  { text: 'Счастье не в том, чтобы делать, что хочешь, а в том, чтобы хотеть то, что делаешь.', author: 'Лев Толстой' },
+  { text: 'У человека можно отнять всё, кроме последней свободы — выбора своего отношения к обстоятельствам.', author: 'Виктор Франкл' },
+  { text: 'Нет ничего важнее следующей минуты.', author: 'Сенека' },
+  { text: 'Сначала научись правилам, потом сражайся с ними.', author: 'Мусаси Миямото' },
+  { text: 'Тот, кто победил сам себя, сильнее того, кто победил тысячу раз в битве.', author: 'Будда' },
+  { text: 'Смерть — это не то, чего нам стоит бояться. Стоит бояться никогда не начать жить.', author: 'Марк Аврелий' },
+  { text: 'Путь длиной в тысячу миль начинается с первого шага.', author: 'Лао-Цзы' },
+  { text: 'Совершенство — не цель, а направление.', author: 'Jocko Willink' },
+  { text: 'Если хочешь достичь чего-либо в этом мире, просыпайся раньше.', author: 'Jocko Willink' },
+  { text: 'Каждый день — это счёт. Каждое утро нужно ответить на вопрос: что я добавлю на эту страницу?', author: 'Марк Аврелий' },
+  { text: 'Незнание — не беда. Беда — нежелание знать.', author: 'Сократ' },
 ]
 
 const todayQuote = computed(() => {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), 0, 0)
-  const dayOfYear = Math.floor((now - start) / (1000 * 60 * 60 * 24))
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
   return quotes[dayOfYear % quotes.length]
 })
 </script>
 
 <style scoped>
 .dashboard {
-  max-width: 860px;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-/* ── Hero ──────────────────────────────────────────────────────────────── */
 .dashboard-hero {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
-.hero-content {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-}
-
-.hero-logo {
-  transform: scale(1.35);
-  transform-origin: left center;
-  margin-bottom: 0.75rem;
-}
-
-.hero-greeting {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+.brand-title {
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: 0.02em;
   color: var(--text-primary);
-  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.brand-heart {
+  color: var(--accent);
+  font-size: 1.6rem;
+}
+
+.brand-eq,
+.brand-family {
+  font-weight: 600;
 }
 
 .hero-date {
+  margin-top: 0.5rem;
   color: var(--text-secondary);
   font-size: 0.95rem;
   text-transform: capitalize;
 }
 
-/* ── Grid ──────────────────────────────────────────────────────────────── */
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
 }
 
-.dashboard-grid .quote-card {
+.progress-card {
   grid-column: 1 / -1;
 }
 
-/* ── Card shared ───────────────────────────────────────────────────────── */
 .card-eyebrow {
   font-size: 0.72rem;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
   text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.4rem;
 }
 
 .card-title {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
-  letter-spacing: -0.015em;
   color: var(--text-primary);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
+  letter-spacing: -0.01em;
 }
 
-/* ── Progress card ─────────────────────────────────────────────────────── */
 .progress-section {
-  /* each progress section */
+  margin-bottom: 0.75rem;
 }
 
 .progress-label {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.progress-name {
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  margin-bottom: 0.35rem;
 }
 
 .progress-pct {
-  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
 }
 
-/* ── Stats card ─────────────────────────────────────────────────────────── */
+.days-remaining {
+  margin-top: 0.75rem;
+}
+
+.remaining-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.remaining-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.report-reminder {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--accent-subtle);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.reminder-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  flex: 1;
+}
+
+.reminder-btn {
+  font-size: 0.82rem;
+  padding: 0.35rem 0.75rem;
+  text-decoration: none;
+}
+
+/* Stats */
 .stats-row {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
-  margin-top: 0.25rem;
+  gap: 1.25rem;
 }
 
 .stat-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 0.2rem;
 }
 
 .stat-value {
-  font-size: 2.75rem;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  color: var(--text-primary);
   line-height: 1;
-  color: var(--accent);
+  letter-spacing: -0.03em;
 }
 
 .stat-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: var(--text-secondary);
-  font-weight: 450;
+  letter-spacing: 0.04em;
 }
 
 .stat-divider {
   width: 1px;
   height: 2.5rem;
   background: var(--border);
-  flex-shrink: 0;
 }
 
 .stat-ring-wrap {
-  margin-left: auto;
   position: relative;
-  width: 52px;
-  height: 52px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
 }
 
 .stat-ring {
-  width: 52px;
-  height: 52px;
+  width: 44px;
+  height: 44px;
   transform: rotate(-90deg);
-  position: absolute;
-  top: 0; left: 0;
 }
 
 .ring-track {
@@ -322,49 +324,49 @@ const todayQuote = computed(() => {
 }
 
 .ring-label {
-  font-size: 0.65rem;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--text-primary);
-  position: relative;
-  z-index: 1;
 }
 
-/* ── Quote card ─────────────────────────────────────────────────────────── */
+/* Quote */
 .quote-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated, var(--bg-card)) 100%);
+  grid-column: 1 / -1;
 }
 
 .quote-text {
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1.1rem;
   font-style: italic;
   color: var(--text-primary);
-  letter-spacing: -0.01em;
-  border-left: 3px solid var(--accent);
-  padding-left: 1rem;
-  margin-left: 0;
+  line-height: 1.6;
+  margin: 0.75rem 0 0.5rem;
 }
 
 .quote-author {
+  font-size: 0.85rem;
   color: var(--text-secondary);
-  font-size: 0.875rem;
-  padding-left: 1rem;
+  font-weight: 500;
 }
 
-/* ── Responsive ─────────────────────────────────────────────────────────── */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
 
-  .dashboard-grid .quote-card {
-    grid-column: auto;
+  .progress-card {
+    grid-column: 1;
   }
 
-  .hero-greeting {
+  .quote-card {
+    grid-column: 1;
+  }
+
+  .brand-title {
     font-size: 1.5rem;
   }
 }
