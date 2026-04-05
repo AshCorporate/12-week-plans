@@ -21,6 +21,7 @@ import AppLogo from './AppLogo.vue'
 const route = useRoute()
 
 const navItems = [
+  { path: '/landing', icon: '◆', label: 'Landing' },
   { path: '/', icon: '⬛', label: 'Главная' },
   { path: '/marathon', icon: '◈', label: 'Марафон' },
   { path: '/daily', icon: '▦', label: 'День' },
