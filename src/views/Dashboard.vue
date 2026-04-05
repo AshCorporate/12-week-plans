@@ -134,8 +134,10 @@ const quotes = [
   { text: 'Незнание — не беда. Беда — нежелание знать.', author: 'Сократ' },
 ]
 
+const MS_PER_DAY = 86400000
+
 const todayQuote = computed(() => {
-  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000)
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / MS_PER_DAY)
   return quotes[dayOfYear % quotes.length]
 })
 </script>
