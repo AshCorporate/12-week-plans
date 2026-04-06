@@ -18,7 +18,7 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
 
   const settings = ref(
     stored.settings || {
-      workMin: 25,
+      workMin: 50,
       shortBreakMin: 5,
       longBreakMin: 15,
       longBreakAfter: 4,
@@ -72,6 +72,8 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
       phaseNumber: 1,
       timerActive: false,
       startedAt: new Date().toISOString(),
+      phaseStartedAt: null,
+      phaseElapsedBeforePause: 0,
       concentrationRating: null,
       notes,
     }
@@ -80,6 +82,8 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   function tickComplete() {
     if (!currentSession.value) return
     const s = currentSession.value
+    s.phaseStartedAt = null
+    s.phaseElapsedBeforePause = 0
     if (s.phase === 'work') {
       s.completedPomodoros++
       if (s.completedPomodoros >= s.plannedPomodoros) {

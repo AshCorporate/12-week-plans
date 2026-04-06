@@ -236,7 +236,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { usePomodoroStore } from '../stores/pomodoro.js'
 import { useTasksStore } from '../stores/tasks.js'
 import TaskCard from '../components/TaskCard.vue'
@@ -278,6 +278,25 @@ function startSession() {
 // --- Timer ---
 const elapsed = ref(0)
 let intervalId = null
+const originalTitle = document.title
+
+function getElapsed() {
+  const s = pomodoroStore.currentSession
+  if (!s) return 0
+  const base = s.phaseElapsedBeforePause || 0
+  if (!s.phaseStartedAt) return base
+  return Math.max(0, base + Math.floor((Date.now() - new Date(s.phaseStartedAt).getTime()) / 1000))
+}
+
+function updateTabTitle() {
+  const s = pomodoroStore.currentSession
+  if (!s) {
+    document.title = originalTitle
+    return
+  }
+  const icon = s.timerActive ? '⏱' : '⏸'
+  document.title = `${icon} ${displayTime.value} — 🍅 Помидор`
+}
 
 const phaseDurationSec = computed(() => {
   const s = pomodoroStore.currentSession
@@ -330,11 +349,18 @@ const showFlash = ref(false)
 
 function toggleTimer() {
   if (!pomodoroStore.currentSession) return
-  if (pomodoroStore.currentSession.timerActive) {
-    pomodoroStore.currentSession.timerActive = false
+  const s = pomodoroStore.currentSession
+  if (s.timerActive) {
+    // Pause: accumulate elapsed before pause, clear start marker
+    s.phaseElapsedBeforePause = getElapsed()
+    s.phaseStartedAt = null
+    s.timerActive = false
     stopInterval()
   } else {
-    pomodoroStore.currentSession.timerActive = true
+    // Start/resume: record the moment this phase began
+    s.phaseStartedAt = new Date().toISOString()
+    s.phaseElapsedBeforePause = s.phaseElapsedBeforePause || 0
+    s.timerActive = true
     startInterval()
   }
 }
@@ -342,7 +368,8 @@ function toggleTimer() {
 function startInterval() {
   if (intervalId) return
   intervalId = setInterval(() => {
-    elapsed.value++
+    elapsed.value = getElapsed()
+    updateTabTitle()
     if (elapsed.value >= phaseDurationSec.value) {
       stopInterval()
       onPhaseComplete()
@@ -355,6 +382,7 @@ function stopInterval() {
     clearInterval(intervalId)
     intervalId = null
   }
+  updateTabTitle()
 }
 
 function onPhaseComplete() {
@@ -363,20 +391,33 @@ function onPhaseComplete() {
   showFlash.value = true
   setTimeout(() => { showFlash.value = false }, 1000)
   elapsed.value = 0
+  if (pomodoroStore.currentSession) {
+    pomodoroStore.currentSession.phaseStartedAt = null
+    pomodoroStore.currentSession.phaseElapsedBeforePause = 0
+  }
   pomodoroStore.tickComplete()
 }
 
 // Watch for phase changes to reset elapsed
 watch(
   () => pomodoroStore.currentSession?.phase,
-  () => { elapsed.value = 0 }
+  () => {
+    elapsed.value = 0
+    if (pomodoroStore.currentSession) {
+      pomodoroStore.currentSession.phaseStartedAt = null
+      pomodoroStore.currentSession.phaseElapsedBeforePause = 0
+    }
+  }
 )
 
 // Stop timer interval when session is cleared
 watch(
   () => pomodoroStore.currentSession,
   (val) => {
-    if (!val) stopInterval()
+    if (!val) {
+      stopInterval()
+      document.title = originalTitle
+    }
   }
 )
 
@@ -462,7 +503,20 @@ function saveSettings() {
   showSettings.value = false
 }
 
-onUnmounted(() => stopInterval())
+onMounted(() => {
+  const s = pomodoroStore.currentSession
+  if (s && s.timerActive) {
+    elapsed.value = getElapsed()
+    startInterval()
+  } else if (s) {
+    elapsed.value = getElapsed()
+  }
+})
+
+onUnmounted(() => {
+  stopInterval()
+  document.title = originalTitle
+})
 </script>
 
 <style scoped>
