@@ -19,8 +19,8 @@ export const usePomodoroStore = defineStore('pomodoro', () => {
   const settings = ref(
     stored.settings || {
       workMin: 50,
-      shortBreakMin: 5,
-      longBreakMin: 15,
+      shortBreakMin: 10,
+      longBreakMin: 20,
       longBreakAfter: 4,
       dailyGoal: 8,
     }
