@@ -51,6 +51,15 @@
           <!-- Active timer on THIS task -->
           <div v-if="isActive" class="timer-active">
             <span class="timer-countdown">{{ pomodoroDisplay }}</span>
+            <div
+              class="timer-progress-bar"
+              :class="{ 'timer-paused': tasksStore.activeTimer?.isPaused }"
+            >
+              <div
+                class="timer-progress-fill"
+                :style="{ width: progressPct + '%' }"
+              ></div>
+            </div>
             <div class="timer-btns">
               <button class="btn btn-ghost btn-xs" @click="togglePause">
                 {{ tasksStore.activeTimer?.isPaused ? '▶' : '⏸' }}
@@ -162,6 +171,18 @@ const pomodoroDisplay = computed(() => {
   const mins = Math.floor(totalSec / 60)
   const secs = totalSec % 60
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+})
+
+const progressPct = computed(() => {
+  if (!isActive.value || !tasksStore.activeTimer) return 100
+  let remaining
+  if (tasksStore.activeTimer.isPaused) {
+    remaining = tasksStore.activeTimer.remainingMs
+  } else {
+    remaining = tasksStore.activeTimer.endTime - now.value
+  }
+  if (remaining < 0) remaining = 0
+  return (remaining / (25 * 60 * 1000)) * 100
 })
 
 function togglePause() {
@@ -347,6 +368,7 @@ function togglePause() {
   flex-direction: column;
   align-items: flex-end;
   gap: 0.3rem;
+  width: 70px;
 }
 
 .timer-countdown {
@@ -356,6 +378,25 @@ function togglePause() {
   letter-spacing: 0.02em;
   color: var(--accent);
   line-height: 1;
+}
+
+.timer-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  border-radius: 100px;
+  overflow: hidden;
+}
+
+.timer-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 100px;
+  transition: width 0.5s linear;
+}
+
+.timer-paused .timer-progress-fill {
+  opacity: 0.6;
 }
 
 .timer-btns {

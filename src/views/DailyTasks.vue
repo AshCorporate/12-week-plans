@@ -5,6 +5,9 @@
       <div>
         <h1 class="page-title">День</h1>
         <p class="page-date">{{ currentDate }}</p>
+        <p v-if="totalCompletedPomodoros > 0" class="page-stats">
+          🍅 {{ totalCompletedPomodoros }} {{ pomodoroWord(totalCompletedPomodoros) }} сегодня · {{ totalFocusMin }} мин фокуса
+        </p>
       </div>
     </header>
 
@@ -160,6 +163,17 @@ const allTasks = computed(() => tasksStore.getTodayTasks())
 const plannedTasks = computed(() => allTasks.value.filter(t => !t.isUnplanned))
 const unplannedTasks = computed(() => allTasks.value.filter(t => t.isUnplanned))
 
+const totalCompletedPomodoros = computed(() =>
+  allTasks.value.reduce((sum, t) => sum + (t.completedPomodoros ?? 0), 0)
+)
+const totalFocusMin = computed(() => totalCompletedPomodoros.value * 25)
+
+function pomodoroWord(n) {
+  if (n % 10 === 1 && n % 100 !== 11) return 'помидор'
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return 'помидора'
+  return 'помидоров'
+}
+
 const activeTaskName = computed(() => {
   if (!tasksStore.activeTimer) return ''
   const task = allTasks.value.find(t => t.id === tasksStore.activeTimer.taskId)
@@ -251,6 +265,13 @@ function playBeep() {
   color: var(--text-secondary);
   font-size: 0.9rem;
   text-transform: capitalize;
+}
+
+.page-stats {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 500;
+  margin-top: 0.25rem;
 }
 
 /* ── Now Playing banner ──────────────────────────────────────────────────── */

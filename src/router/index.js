@@ -5,7 +5,6 @@ import DailyTasks from '../views/DailyTasks.vue'
 import Marathon from '../views/Marathon.vue'
 import RulesOfPath from '../views/RulesOfPath.vue'
 import Settings from '../views/Settings.vue'
-import PomodoroTimer from '../views/PomodoroTimer.vue'
 import ProductivityTracker from '../views/ProductivityTracker.vue'
 import Finance from '../views/Finance.vue'
 import Knowledge from '../views/Knowledge.vue'
@@ -18,7 +17,6 @@ const routes = [
   { path: '/marathon', component: Marathon },
   { path: '/rules', component: RulesOfPath },
   { path: '/settings', component: Settings },
-  { path: '/pomodoro', component: PomodoroTimer },
   { path: '/productivity', component: ProductivityTracker },
   { path: '/finance', component: Finance },
   { path: '/knowledge', component: Knowledge },
