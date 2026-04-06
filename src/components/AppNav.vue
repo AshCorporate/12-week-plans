@@ -70,7 +70,6 @@ const mainItems = [
 ]
 
 const productivityItems = [
-  { path: '/pomodoro', icon: 'pomodoro', label: 'Помидор' },
   { path: '/tracker', icon: 'tracker', label: 'Трекер дня' },
   { path: '/productivity', icon: 'productivity', label: 'Статистика' },
 ]
