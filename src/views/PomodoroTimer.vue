@@ -206,8 +206,8 @@
         <h2 class="section-title">⚙️ Настройки таймера</h2>
         <div class="settings-grid">
           <label class="settings-field">
-            <span>Работа (мин)</span>
-            <input v-model.number="settingsForm.workMin" type="number" min="1" max="60" class="input" />
+            <span>Работа (мин) <small class="hint-sm">рекомендуется&nbsp;50&nbsp;мин</small></span>
+            <input v-model.number="settingsForm.workMin" type="number" min="1" max="120" class="input" />
           </label>
           <label class="settings-field">
             <span>Короткий перерыв (мин)</span>
@@ -736,6 +736,12 @@ onUnmounted(() => {
   color: var(--text-secondary);
   font-size: 0.9rem;
   margin-top: 0.75rem;
+}
+
+.hint-sm {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 /* Timer screen */

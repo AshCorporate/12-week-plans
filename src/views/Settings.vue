@@ -10,6 +10,33 @@
     </div>
 
     <div class="card settings-card">
+      <h3>Настройки таймера Pomodoro</h3>
+      <div class="pomodoro-settings-grid">
+        <label class="pomodoro-field">
+          <span>Время фокуса (мин)</span>
+          <input v-model.number="pomodoroForm.workMin" type="number" min="1" max="120" class="input" />
+        </label>
+        <label class="pomodoro-field">
+          <span>Короткий перерыв (мин)</span>
+          <input v-model.number="pomodoroForm.shortBreakMin" type="number" min="1" max="60" class="input" />
+        </label>
+        <label class="pomodoro-field">
+          <span>Длинный перерыв (мин)</span>
+          <input v-model.number="pomodoroForm.longBreakMin" type="number" min="1" max="60" class="input" />
+        </label>
+        <label class="pomodoro-field">
+          <span>Длинный перерыв после (помидоров)</span>
+          <input v-model.number="pomodoroForm.longBreakAfter" type="number" min="2" max="10" class="input" />
+        </label>
+        <label class="pomodoro-field">
+          <span>Дневная цель (помидоров)</span>
+          <input v-model.number="pomodoroForm.dailyGoal" type="number" min="1" max="20" class="input" />
+        </label>
+      </div>
+      <button class="btn btn-primary save-pomodoro-btn" @click="savePomodoroSettings">Сохранить настройки таймера</button>
+    </div>
+
+    <div class="card settings-card">
       <h3>Тема оформления</h3>
       <div class="theme-grid">
         <button
@@ -37,9 +64,22 @@
 </template>
 
 <script setup>
+import { ref, watch } from 'vue'
 import { useSettingsStore } from '../stores/settings.js'
+import { usePomodoroStore } from '../stores/pomodoro.js'
 
 const settings = useSettingsStore()
+const pomodoroStore = usePomodoroStore()
+
+const pomodoroForm = ref({ ...pomodoroStore.settings })
+
+watch(() => pomodoroStore.settings, (val) => {
+  pomodoroForm.value = { ...val }
+}, { deep: true })
+
+function savePomodoroSettings() {
+  pomodoroStore.updateSettings({ ...pomodoroForm.value })
+}
 
 const themes = [
   { id: 'bw-dark',  label: 'Чёрно-белая (тёмная)',  bg: '#0A0A0A', accent: '#FFFFFF' },
@@ -76,6 +116,32 @@ function confirmReset() {
 }
 .field-row .input {
   color-scheme: dark;
+}
+
+/* Pomodoro settings */
+.pomodoro-settings-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.pomodoro-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.pomodoro-field .input {
+  width: 80px;
+  text-align: center;
+}
+
+.save-pomodoro-btn {
+  width: 100%;
 }
 
 /* Theme picker grid */

@@ -52,7 +52,7 @@
           :task="task"
           @toggle="tasksStore.toggleTask(task.id)"
           @delete="tasksStore.deleteTask(task.id)"
-          @start-pomodoro="tasksStore.startTimer(task.id, 25 * 60 * 1000)"
+          @start-pomodoro="tasksStore.startTimer(task.id, pomodoroStore.settings.workMin * 60 * 1000)"
           @increment-planned="tasksStore.incrementPlanned(task.id)"
           @decrement-planned="tasksStore.decrementPlanned(task.id)"
           @record-interruption="tasksStore.recordInterruption(task.id)"
@@ -103,7 +103,7 @@
           :task="task"
           @toggle="tasksStore.toggleTask(task.id)"
           @delete="tasksStore.deleteTask(task.id)"
-          @start-pomodoro="tasksStore.startTimer(task.id, 25 * 60 * 1000)"
+          @start-pomodoro="tasksStore.startTimer(task.id, pomodoroStore.settings.workMin * 60 * 1000)"
           @increment-planned="tasksStore.incrementPlanned(task.id)"
           @decrement-planned="tasksStore.decrementPlanned(task.id)"
           @record-interruption="tasksStore.recordInterruption(task.id)"
@@ -128,8 +128,10 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import TaskCard from '../components/TaskCard.vue'
 import { useTasksStore } from '../stores/tasks.js'
+import { usePomodoroStore } from '../stores/pomodoro.js'
 
 const tasksStore = useTasksStore()
+const pomodoroStore = usePomodoroStore()
 
 const newTaskText = ref('')
 const newTaskPomodoros = ref(1)
@@ -166,7 +168,7 @@ const unplannedTasks = computed(() => allTasks.value.filter(t => t.isUnplanned))
 const totalCompletedPomodoros = computed(() =>
   allTasks.value.reduce((sum, t) => sum + (t.completedPomodoros ?? 0), 0)
 )
-const totalFocusMin = computed(() => totalCompletedPomodoros.value * 25)
+const totalFocusMin = computed(() => totalCompletedPomodoros.value * pomodoroStore.settings.workMin)
 
 function pomodoroWord(n) {
   if (n % 10 === 1 && n % 100 !== 11) return 'помидор'
@@ -181,7 +183,10 @@ const activeTaskName = computed(() => {
 })
 
 const pomodoroDisplay = computed(() => {
-  if (!tasksStore.activeTimer) return '25:00'
+  if (!tasksStore.activeTimer) {
+    const m = pomodoroStore.settings.workMin
+    return `${String(m).padStart(2, '0')}:00`
+  }
   let remaining
   if (tasksStore.activeTimer.isPaused) {
     remaining = tasksStore.activeTimer.remainingMs
